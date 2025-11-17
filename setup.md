@@ -41,15 +41,14 @@
 > 참고 사항: 안정적인 세팅 순서
 
 1. **프론트엔드 설정**  
-   - `npx create-next-app frontend --typescript --tailwind`  
-   - Zustand, axios 설치
-   - ESLint, Prettier, Husky 설정
-
+   - `npx create-next-app@latest frontend --ts --eslint --app --src-dir false --import-alias "@/*"`
+   - `npm i zustand @supabase/supabase-js`
+   - axios 설치
+   
 2. **백엔드 설정**  
    - `npx express-generator backend --no-view` 후 TypeScript 적용  
    - API 기본 구조 (`routes`, `controllers`, `models`)
-   - ESLint, Prettier, Husky 동일하게 적용
-
+   
 3. **shared 폴더 생성**  
    - `types.ts`, `zodSchemas.ts` 등 공용 타입 정의
 
@@ -73,68 +72,23 @@
 
 ---
 
-## 💬 ESLint / Prettier / Husky 설정
-
-> 코드 품질, 일관성, 협업 효율을 위해 프론트·백 모두 동일하게 적용 권장
-
-1. **의존성 설치**
-   - `npm install -D eslint prettier eslint-config-prettier eslint-plugin-prettier husky lint-staged`
-
-2. **`.eslintrc.json`**
-{
-  "extends": ["next/core-web-vitals", "prettier"],
-  "plugins": ["prettier"],
-  "rules": {
-    "prettier/prettier": [
-      "error",
-      {
-        "singleQuote": true,
-        "semi": true,
-        "tabWidth": 2,
-        "trailingComma": "all",
-        "printWidth": 100
-      }
-    ]
-  }
-}
-
-3. **`.prettierrc`**
-{
-  "singleQuote": true,
-  "semi": true,
-  "tabWidth": 2,
-  "trailingComma": "all",
-  "printWidth": 100
-}
-
-4. **`package.json` 스크립트 추가**
-{
-  "scripts": {
-    "lint": "eslint . --ext .ts,.tsx",
-    "format": "prettier --write ."
-  },
-  "lint-staged": {
-    "*.{ts,tsx,js,jsx,json,css,md}": ["eslint --fix", "prettier --write"]
-  }
-}
-
-5. **Husky 설정**
-npx husky install
-npx husky add .husky/pre-commit "npx lint-staged"
-
----
-
 ## 💬 Core Features (Step by Step)
 
 1. **월드컵 생성**
-   - 운영자 혹은 사용자가 “새 월드컵 만들기” 버튼 클릭  
-   - 제목, 설명, 이미지(최소 32개 업로드) 등록  
-   - 제목과 이미지들이 Supabase에 저장  
+   - 운영자가 /hidden-admin에서 로그인하면 -> 루트페이지로 리다이렉트
+   - 로그인 후, 헤더 옆에 생성된 "새 월드컵 생성하기" 버튼 (로그인 전에는 안 보임)
+   - "새 월드컵 생성하기" 버튼 누르면, 게시물 올릴 수 있는 페이지 띄워짐
+   - 그 페이지에 "제목, 설명, 이미지(최소 32개 업로드)" 등록.
+     이 때, 이미지는 내 컴퓨터에서 찾아서 첨부하는 형식으로 구현.
+     용량 최적화 webp 변환 생각해보기.
+   - 그리고 생성 버튼 누르면, 제목, 설명, 이미지들이 Supabase에 저장
    - “32개 이상 이미지가 있어야 등록 가능”
 
 2. **월드컵 진행 로직**
+   - src/app/page.tsx에 게시물 인기순or최신순으로 페이지네이션으로 구현
+   - 비로그인 사용자도 참여 가능.
    - 기본 32강 → 16강 → 8강 → 4강 → 결승 → 우승
-   - 각 라운드마다 1:1 비교 → 선택된 항목만 다음 라운드로 이동  
+   - 각 라운드마다 랜덤하게 1:1 비교 → 선택된 항목만 다음 라운드로 이동  
    - 최종 우승자(이미지 ID, 이름) 저장
 
 3. **결과 & 댓글 기능**
@@ -151,17 +105,17 @@ npx husky add .husky/pre-commit "npx lint-staged"
 ## 💬 Database Design (Supabase PostgreSQL)
 
 ### 1️⃣ tournaments
-| Column      | Type      | Description |
-| ----------- | --------- | ----------- |
-| id          | uuid      | 기본키       |
-| title       | text      | 월드컵 제목  |
-| description | text      | 간단 설명    |
-| created_at  | timestamp | 생성 시각    |
+| Column      | Type      | Description         |
+| ----------- | --------- | ------------------- |
+| id          | uuid      | PK 기본키            |
+| title       | text      | 월드컵 제목          |
+| description | text      | 간단 설명 (nullable) |
+| created_at  | timestamp | 생성 시각            |
 
 ### 2️⃣ images
 | Column        | Type      | Description |
 | ------------- | --------- | ----------- |
-| id            | uuid      | 기본키       |
+| id            | uuid      | PK 기본키    |
 | tournament_id | uuid      | FK          |
 | image_url     | text      | 이미지 경로  |
 | name          | text      | 후보 이름    |
@@ -171,7 +125,7 @@ npx husky add .husky/pre-commit "npx lint-staged"
 ### 3️⃣ results
 | Column          | Type      | Description |
 | --------------- | --------- | ----------- |
-| id              | uuid      | 기본키       |
+| id              | uuid      | PK 기본키    |
 | tournament_id   | uuid      | FK          |
 | winner_image_id | uuid      | FK          |
 | winner_name     | text      | 우승 이름    |
@@ -180,7 +134,7 @@ npx husky add .husky/pre-commit "npx lint-staged"
 ### 4️⃣ comments
 | Column        | Type      | Description |
 | ------------- | --------- | ----------- |
-| id            | uuid      | 기본키       |
+| id            | uuid      | PK 기본키    |
 | tournament_id | uuid      | FK          |
 | nickname      | text      | 익명 닉네임  |
 | content       | text      | 댓글 내용    |
@@ -215,7 +169,7 @@ npx husky add .husky/pre-commit "npx lint-staged"
 ## 💬 Example Folder Structure
 
 root/
-├── frontend/ # Next.js + TS + Tailwind + Zustand
+├── frontend/ # Next.js + TS + Tailwind + ShadcnUI + Zustand
 ├── backend/ # Express + TS + Supabase 연결
 ├── shared/ # 공용 타입 정의
 ├── docker-compose.yml
@@ -223,3 +177,38 @@ root/
 └── README.md
 
 ---
+
+## 프론트엔드 트리구조
+
+frontend/features/worldcup
+    api/
+
+    components/
+
+
+
+frontend/src/app
+    (admin)/
+        hidden-admin/
+            page.tsx        // 로그인 폼 구현
+        worldcup/create/
+            page.tsx        // 이상형월드컵 게시물 만들기
+
+    (public)/
+        worldcup/[id]/      // 게시물 id
+            page.tsx        // 클릭 시 보이는 게임 페이지
+            result/
+                page.tsx    // 결과 페이지: 최종 우승 페이지 + 댓글
+        page.tsx            // 루트페이지
+
+    components/             // 컴포넌트
+        dark-toggle.tsx
+        Footer.tsx
+        Header.tsx
+        theme-provider.tsx
+
+    globals.css             // 전역css
+    layout.tsx              // 공통 레이아웃 (헤더푸터)
+
+---
+
