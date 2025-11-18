@@ -46,7 +46,10 @@
    - axios 설치
    
 2. **백엔드 설정**  
-   - `npx express-generator backend --no-view` 후 TypeScript 적용  
+   - `mkdir backend`-> `cd backend ` -> `npm init -y`
+   - `npm install express cors cookie-parser dotenv @supabase/supabase-js`
+   - `npm install -D typescript ts-node-dev @types/node @types/express @types/cors @types/cookie-parser`
+   - `npx tsc --init`
    - API 기본 구조 (`routes`, `controllers`, `models`)
    
 3. **shared 폴더 생성**  
@@ -186,7 +189,6 @@ frontend/features/worldcup
     components/
 
 
-
 frontend/src/app
     (admin)/
         hidden-admin/
@@ -212,3 +214,40 @@ frontend/src/app
 
 ---
 
+## 🔐 보안 & 권한 설계
+
+1. 운영자 인증: Supabase Auth + 서버(Express) 세션 검증 방식
+
+- 운영자는 Supabase Auth 이메일 로그인 사용.
+- 프론트가 로그인 성공 → **백엔드(Express)**로 토큰 전달.
+- 백엔드가 Supabase 서버 SDK로 사용자 정보 확인 → 운영자인지 검증.
+- 맞으면 백엔드가 HttpOnly 쿠키 발급.  
+  (이 쿠키가 서비스 전체에서 “관리자 인증” 역할)
+▶️ 즉, **운영자 인증 = Supabase Auth → Express 서버가 최종 인증자**
+
+
+2. 게시물 CRUD 권한: Express 백엔드에서 Supabase Service Role 키 사용
+
+- 운영자 권한이 필요한 작업은 모두 Express 서버를 통해 처리.
+- 서버는 쿠키 검사 → 관리자면 service_role로 DB 수정.
+▶️ 즉, **Service Role = 서버 전용. 절대 공개 금지.**
+
+
+3. 일반 사용자 (로그인 없음)
+
+- 읽기(read): Supabase anon-key로 클라이언트에서 직접 가능.
+- 쓰기(write): 반드시 Express 백엔드 거쳐서.
+    ㄴ> 댓글 쓰기는 백엔드에서 rate limit + 필터링 후 DB 반영.  
+    ㄴ> 익명 사용자이므로 직접 DB write는 위험 → 서버로 우회.
+▶️ 즉, **익명 사용자는 DB 읽기만 직접 가능. 모든 쓰기는 백엔드 API 통해서만 허용.**
+
+
+4. Zustand 상태 관리: 진짜 관리자 인증은 서버 쿠키로만 판단.
+▶️ 즉, **Zustand는 단순 UI 표시용. 보안 판단은 서버 세션으로만.**
+
+
+5. 보안 설계 결론
+- 운영자 인증은 Supabase Auth → Express 서버 검증 + HttpOnly 쿠키.
+- DB 쓰기 권한은 서버에서 Service Role로 처리.
+- 일반 사용자는 anon-key로 읽기만 가능하고, 쓰기는 백엔드로만.
+- Service Role Key는 브라우저 번들에 절대 실리지 않도록 엄격히 관리.
