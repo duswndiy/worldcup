@@ -21,8 +21,13 @@ export function DarkToggle() {
     const nextTheme = theme === "dark" ? "light" : "dark";
 
     return (
-    <Button variant="ghost" size="icon" aria-label="테마 전환" onClick={() => setTheme(nextTheme)}>
-        <Icon className="h-4 w-4" />
-    </Button>
+        <Button 
+            variant="ghost"
+            size="icon"
+            aria-label="다크모드"
+            onClick={() => setTheme(nextTheme)}
+        >
+            <Icon className="h-4 w-4" />
+        </Button>
     );
 }
