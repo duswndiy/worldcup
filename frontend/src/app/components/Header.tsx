@@ -3,12 +3,12 @@ import Link from "next/link";
 
 export default function Header() {
     return (
-        <header className="border-b border-slate-800">
-        <div className="mx-auto max-w-5xl px-6 py-4">
+        <header>
+        <div className="mx-auto flex max-w-[1500px] items-center justify-between px-8 py-6">
             <Link href="/">
                 <h1 className="text-lg font-semibold">Worldcup</h1>
-                <DarkToggle />
             </Link>
+            <DarkToggle />
         </div>
         </header>
     );
