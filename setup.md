@@ -1,115 +1,165 @@
-# 프로젝트 기획서 — Ideal World Cup (이상형 월드컵 서비스)
+# 기획서 — Ideal World Cup (이상형 월드컵)
 
-## 🎯 Goal
-운영자와 익명의 사용자들이 다양한 주제의 “이상형 월드컵(토너먼트 구조)”을 만들고 참여할 수 있는 웹 서비스 구축.
+🎯 목표: 사용자들이 다양한 주제의 "이상형 월드컵" 게임에 참여할 수 있는 웹 서비스 구축.
 
----
+- 운영 안정화 이전 단계
+┌ 로그인 및 게임 생성(이상형 월드컵 게시물 생성)은 운영자만 가능.
+└ 비로그인 사용자 모두 "이상형 월드컵 게임 참여 + 결과 보기 + 댓글 읽기/작성" 가능.
 
-## 💬 Tech Stack & Structure
+- 향후 확장: 일반 사용자도 회원가입/로그인 후, 일정 조건 내에서 게임 생성 가능하도록 확장 예정.
 
-### Frontend
-- **Framework**: Next.js (App Router)
-- **Language**: TypeScript
-- **Styling**: TailwindCSS
-- **State Management**: Zustand
-- **API Communication**: RESTful API (fetch/axios)
-- **Image Upload**: Supabase Storage
-- **Deployment**: Vercel
 
-### Backend
-- **Framework**: Express.js (Node.js)
-- **Language**: TypeScript
-- **Database**: Supabase(PostgreSQL)
-- **API Style**: RESTful
-- **Deployment**: Render or Railway
-- **Shared Types**: `/shared` 폴더에 프론트·백 공용 타입 정의
+----------------------------------------------------------------------------------------
 
-### CI/CD
-- **GitHub Actions**
-  - main 브랜치 push 시 자동 테스트 & Lint
-  - Docker 빌드 및 배포 자동화 (Render or Railway /Vercel 연결)
 
-### Containerization
-- **Docker Compose**
-  - frontend / backend / db(Postgres) 세 컨테이너 실행
-  - 환경 변수는 `.env` 파일로 관리
+💬 기술 스택
 
----
+- 프론트엔드
+┌ Framework: Next.js (App Router)
+├ Language: TypeScript
+├ Styling: TailwindCSS + Shadcn UI
+├ State Management: Zustand
+├ API Communication: RESTful API (fetch/axios)
+├ Image Upload: 
+    ㄴ> 파일 자체는 "Supabase Storage"에 직접 업로드.
+    ㄴ> 업로드 후, 이미지 경로만 백엔드(Express)로 전달 -> DB에 메타데이터 저장.
+└ Deployment: Vercel
 
-## ⚙️ Setup 순서
 
-> 참고 사항: 안정적인 세팅 순서
+- 백엔드
+┌ Framework: Express.js (Node.js)
+├ Language: TypeScript
+├ Database: Supabase(PostgreSQL)
+├ API Style: RESTful
+├ Supabase SDK:
+    ㄴ> 서버에서는 "service_role_key" 사용해서 DB 쓰기 처리 (서버 전용).
+    ㄴ> 클라이언트에서는 "anon_key" 사용해서 읽기 전용 접근.
+└ Deployment: Render or Railway
 
-1. **프론트엔드 설정**  
-   - `npx create-next-app@latest frontend --ts --eslint --app --src-dir false --import-alias "@/*"`
-   - `npm i zustand @supabase/supabase-js`
-   - axios 설치
-   
-2. **백엔드 설정**  
-   - `mkdir backend`-> `cd backend ` -> `npm init -y`
-   - `npm install express cors cookie-parser dotenv @supabase/supabase-js`
-   - `npm install -D typescript ts-node-dev @types/node @types/express @types/cors @types/cookie-parser`
-   - `npx tsc --init`
-   - API 기본 구조 (`routes`, `controllers`, `models`)
-   
-3. **shared 폴더 생성**  
-   - `types.ts`, `zodSchemas.ts` 등 공용 타입 정의
 
-4. **Docker 환경 세팅**  
-   - `Dockerfile`, `docker-compose.yml` 작성  
-   - 로컬에서 frontend/backend/db 통합 실행 확인
 
-5. **Supabase 연결**  
-   - Supabase 프로젝트 생성  
-   - .env에 `SUPABASE_URL`, `SUPABASE_KEY` 추가  
-   - 초기 테이블 생성 (아래 참고)
+- Shared: `/shared` 폴더에 프론트·백 공용 타입 정의
 
-6. **GitHub Actions 구성**  
-   - `.github/workflows/deploy.yml` 추가  
-   - main push → 자동 빌드 및 배포 트리거
 
-7. **배포 연결**  
-   - 프론트: Vercel 연결  
-   - 백엔드: Render/Railway Docker로 배포  
-   - Supabase는 클라우드 DB로 자동 연결됨
 
----
+- CI/CD: GitHub Actions
+┌ main 브랜치 push 시 자동 테스트 & Lint
+└ Docker 빌드 및 배포 자동화 (Render or Railway /Vercel 연결)
 
-## 💬 Core Features (Step by Step)
 
-1. **월드컵 생성**
-   - 운영자가 /hidden-admin에서 로그인하면 -> 루트페이지로 리다이렉트
-   - 로그인 후, 헤더 옆에 생성된 "새 월드컵 생성하기" 버튼 (로그인 전에는 안 보임)
-   - "새 월드컵 생성하기" 버튼 누르면, 게시물 올릴 수 있는 페이지 띄워짐
-   - 그 페이지에 "제목, 설명, 이미지(최소 32개 업로드)" 등록.
-     이 때, 이미지는 내 컴퓨터에서 찾아서 첨부하는 형식으로 구현.
-     용량 최적화 webp 변환.
-   - 그리고 생성 버튼 누르면, 제목, 설명, 이미지들이 Supabase에 저장
-   - “32개 이상 이미지가 있어야 등록 가능”
-   - 이미지 업로드 방법: 프론트에서 Supabase Storage에 직접 업로드 -> 서버(Express)에는 업로드 된 이미지 경로(path)만 보내 -> DB에 저장.
-     multer 사용은 안 하는 것으로.
 
-2. **월드컵 진행 로직**
-   - src/app/page.tsx에 게시물 인기순or최신순으로 페이지네이션으로 구현
-   - 비로그인 사용자도 참여 가능.
-   - 기본 32강 → 16강 → 8강 → 4강 → 결승 → 우승
-   - 각 라운드마다 랜덤하게 1:1 비교 → 선택된 항목만 다음 라운드로 이동  
-   - 최종 우승자(이미지 ID, 이름) 저장
+- Containerization: Docker Compose
+┌ frontend / backend / db(Postgres) 세 컨테이너 실행
+└ 환경 변수는 `.env` 파일로 관리
 
-3. **결과 & 댓글 기능**
-   - 로그인 없이 익명 댓글 작성 가능 (닉네임 입력 optional)
-   - 각 월드컵의 우승 결과 페이지에 댓글 표시  
-   - 댓글 테이블에서 해당 tournament_id 기준으로 fetch
 
-4. **공유 기능**
-   - 우승 결과 페이지에서 “카카오톡 공유하기” 버튼 (Kakao SDK 연동)
-   - 선택한 결과 이미지 + 제목 + 링크 공유
+----------------------------------------------------------------------------------------
+
+
+⚙️ Setup 순서
+
+- 프론트엔드 설정
+┌ `npx create-next-app@latest frontend --ts --eslint --app --src-dir false --import-alias "@/*"`
+├ `cd frontend`
+├ `npm i zustand @supabase/supabase-js`
+└ axios 설치 (fetch 사용 시 생략략)
+
+
+- 백엔드 설정
+┌ `mkdir backend`-> `cd backend ` -> `npm init -y`
+├ `npm install express cors cookie-parser dotenv @supabase/supabase-js`
+├ `npm install -D typescript ts-node-dev @types/node @types/express @types/cors @types/cookie-parser`
+├ `npx tsc --init`
+└ API 기본 구조 (`routes`, `controllers`, `models`)
+
+
+- shared 폴더
+┌ root/shared 폴더 생성
+└ `types.ts`, `zodSchemas.ts` 등 공용 타입 정의
+
+
+- Docker 환경 세팅
+┌ `Dockerfile`, `docker-compose.yml` 작성  
+└ 로컬에서 `docker-compose up`으로 frontend/backend/db 통합 실행 확인
+
+
+- Supabase 연결
+
+
+- GitHub Actions 구성
+┌ `.github/workflows/deploy.yml` 추가  
+└ main push → 자동 빌드 및 배포 트리거
+
+
+- 배포 연결
+┌ 프론트: Vercel 연결  
+├ 백엔드: Render/Railway Docker로 배포  
+└ Supabase는 클라우드 DB로 자동 연결
+
+
+----------------------------------------------------------------------------------------
+
+
+💬 메인 기능
 
 ---
 
-## 💬 Database Design (Supabase PostgreSQL)
+- 월드컵(토너먼트) 게임 생성: 운영자 전용
 
-### 1️⃣ tournaments
+┌ /hidden-admin에서 로그인 -> 루트페이지로 리다이렉트
+├ 로그인 후에만 다크토글 옆에 생성된 "게시물 생성하기" 버튼 (비로그인/일반사용자에겐 보이지 않음)
+├ "게시물 생성하기" 버튼 누르면, 게시물 올릴 수 있는 페이지로 이동:
+    ㄴ> 제목 + 설명(생략가능) + 이미지(최소 32개 업로드).
+    ㄴ> 이미지는 로컬에서 첨부 -> supabase storage에 직접 업로드 -> 업로드 경로를 Express에 전달.
+    ㄴ> 용량 최적화 webp 변환.
+└ "월드컵 생성하기" 버튼 클릭 시 처리 흐름:
+    ㄴ> 프론트: 스토리지에 업로드 된 이미지들의 경로 확보 -> 제목/설명/이미지 메타데이터 Express로 POST.
+    ㄴ> 백엔드: 이미지 개수 검사, 제목/설명 길이 제한, supabase 서버 SDK + 서비스롤키로 테이블에 INSERT.
+
+---
+
+- 월드컵 게임 진행: 누구나 가능 + 로그인 불필요
+
+┌ "/" 페이지에 게임 리스트 노출:
+    ㄴ> 인기순 또는 최신순으로 정렬 가능
+    ㄴ> 페이지네이션
+├ 특정 게시물 클릭 시, "/worldcup/[id]"에서 게임 시작:
+    ㄴ> 기본 구조: 32강 → 16강 → 8강 → 4강 → 결승 → 우승
+    ㄴ> 각 라운드마다 랜덤하게 1:1 비교 → 선택된 후보만 다음 라운드로 진출
+├ 상태관리 (Zustand): 현재 라운드, 남은 후보 목록, 선택된 이미지
+└ 최종 우승자 결정 시:
+    ㄴ> 프론트에서 Express의 "POST /api/result"로 결과 전송
+    ㄴ> 익명 사용자도 가능, 로그인 불필요
+
+---
+
+- 결과 & 댓글 기능: 누구나 가능
+
+┌ "/worldcup/[id]/result" 경로에서:
+    ㄴ> 최종 우승 이미지/이름 정보 표시
+    ㄴ> 결과에 대한 댓글 리스트 보여주기
+├ 댓글 작성:
+    ㄴ> 로그인 없이 작성 가능
+    ㄴ> 닉네임 입력 optional, 없으면 "익명" 등으로 처리.
+    ㄴ> 프론트에서 "POST /api/comments" 호출 -> Express -> Supabase 저장
+└ 댓글 목록 조회:
+    ㄴ> 프론트에서 Supabase "anon_key"로 "comments"테이블 "read-only" 조회.
+    ㄴ> "tournament_id" 기준으로 필터.
+
+---
+
+- 공유 기능:
+
+┌ 결과 페이지에서 "카카오톡 공유하기" 버튼 (Kakao SDK 연동)
+└ 선택한 결과 이미지 + 제목 + 링크 공유
+
+
+----------------------------------------------------------------------------------------
+
+
+💬 테이블
+
+1️⃣ tournaments (이후 확장 시, creator_id 칼럼 추가해야 됨)
 | Column      | Type      | Description         |
 | ----------- | --------- | ------------------- |
 | id          | uuid      | PK 기본키            |
@@ -117,7 +167,8 @@
 | description | text      | 간단 설명 (nullable) |
 | created_at  | timestamp | 생성 시각            |
 
-### 2️⃣ images
+
+2️⃣ images
 | Column        | Type      | Description |
 | ------------- | --------- | ----------- |
 | id            | uuid      | PK 기본키    |
@@ -127,7 +178,7 @@
 | created_at    | timestamp | 업로드 시각  |
 
 
-### 3️⃣ results
+3️⃣ results
 | Column          | Type      | Description |
 | --------------- | --------- | ----------- |
 | id              | uuid      | PK 기본키    |
@@ -136,7 +187,8 @@
 | winner_name     | text      | 우승 이름    |
 | created_at      | timestamp | 결과 시각    |
 
-### 4️⃣ comments
+
+4️⃣ comments
 | Column        | Type      | Description |
 | ------------- | --------- | ----------- |
 | id            | uuid      | PK 기본키    |
@@ -145,9 +197,12 @@
 | content       | text      | 댓글 내용    |
 | created_at    | timestamp | 작성 시각    |
 
----
 
-## 💬 Tournament Logic Summary
+----------------------------------------------------------------------------------------
+
+
+💬 토너먼트 로직
+
 | 단계 | 남은 후보 수 | 필요한 이미지 수 | 비교 횟수 |
 |------|-------------|-----------------|----------|
 | 32강 | 32          | ✅ 32개 필요    | 16회     |
@@ -155,33 +210,80 @@
 | 8강  | 8           | 자동 선정        | 4회      |
 | 4강  | 4           | 자동 선정        | 2회      |
 | 결승 | 2           | 자동 선정        | 1회      |
-| ✅ 최종 필요 이미지 개수 | **32장** |
+
+
+----------------------------------------------------------------------------------------
+
+
+💬 구현 시 고려해야 할 사항
+
+- 결과 저장 API (POST /api/result)
+┌ 익명 사용자도 호출 가능 (로그인 불필요)
+└ Express에서 검증 (토너먼트 존재 여부, winner_image_id 유효성 등) + rate limit 후 Supabase에 저장
+
+- 댓글 저장 API (POST /api/comments): Express에서 욕설/스팸 필터 + 길이 제한 + rate limit 후 Supabase에 저장
+
+- DB 쓰기 규칙
+┌ 클라이언트(브라우저)는 Supabase REST/API로 직접 write 하지 않는다.
+└ 모든 DB 쓰기(게시물 생성, 이미지 메타데이터, 결과, 댓글)는
+  프론트 -> Express -> Supabase(service_role)경로를 통해서만 처리한다.
+
+
+----------------------------------------------------------------------------------------
+
+
+🔐 보안 & 권한 설계
 
 ---
 
-## 💬 Implementation Notes
+- 운영자 인증: Supabase Auth + 서버(Express) 세션 검증 방식
 
-- 상태 관리는 **Zustand**로 현재 라운드, 남은 후보, 선택된 이미지 관리  
-- 게임 종료 시 우승자 데이터 백엔드에 POST 
-- 결과 저장 API: `POST / api/result`
-- 댓글 저장 API: `POST / api/comments`
-- 댓글 작성은 Supabase REST API 직접 호출 (Auth 미사용)
-- 프론트는 Vercel, 백엔드는 Render or Railway에 배포 (환경변수는 각각 설정)
-- Docker로 로컬 테스트 (`docker-compose up`)
+┌ 운영자는 Supabase Auth 이메일 로그인 사용.
+├ 프론트: Auth로 로그인 성공 -> access token 획득 -> 백엔드(Express)로 전달.
+└ 백엔드: Supabase 서버 SDK로 토큰 검증 -> 맞으면 HttpOnly 쿠키 발급
+
+▶️ 운영자 인증 = Supabase Auth -> Express 서버가 최종 인증자
 
 ---
 
-## 💬 Example Folder Structure
+- DB 쓰기 권한: Express + Service Role
 
-root/
-├── frontend/ # Next.js + TS + Tailwind + ShadcnUI + Zustand
-├── backend/ # Express + TS + Supabase 연결
-├── shared/ # 공용 타입 정의
-├── docker-compose.yml
-├── .github/workflows/deploy.yml
-└── README.md
+┌ 운영자 권한이 필요한 작업: 월드컵 게임 생성/수정/삭제, 이미지 메타데이터(images) 저장.
+├ 익명/일반 사용자도 가능한 쓰기: 게임 결과(result) 저장, 댓글(comments) 작성.
+└ 위 모든 DB 쓰기는 공통적으로:
+    ㄴ> 프론트 -> Express -> Supabase 서버 SDK + Service_Role_Key
+    ㄴ> Express에서 인증/검증/필터링/로깅 수행 후 DB 반영.
+
+▶️ "Service_Role_Key" = 서버전용. 브라우저 번들, public repo, 로그 등 노출 절대 금지.
 
 ---
+
+- 일반 사용자 (로그인 불필요)
+
+┌ 읽기(read):
+    ㄴ> Supabase "anon-key"로 클라이언트에서 직접 가능.
+    ㄴ> "tournaments", "images", "results", "comments" 테이블 read-only로 사용.
+└ 쓰기(write):
+    ㄴ> 댓글 쓰기, 결과 저장 등은 반드시 Express 백엔드 거쳐서.
+    ㄴ> 백엔드에서 rate limit + 필터링 후 DB 반영.  
+    ㄴ> 익명 사용자이므로 직접 DB write는 위험 → 서버로 우회.
+
+▶️ 익명 사용자는 DB 읽기만 직접 가능. 모든 쓰기는 백엔드 API 통해서만 허용.
+
+---
+
+- Supabase RLS & Storage 정책
+
+┌ RLS (행 수준 보안):
+    ㄴ> "tournaments", "images", "results", "comments" 테이블에 대해 "SELECT"만 허용.
+    ㄴ> INSERT/UPDATE/DELETE 모두 차단.
+└ Storage 정책: 서비스에 사용된 이미지를 위한 버킷 (예: images)
+    ㄴ> 읽기: public read 허용
+    ㄴ> 쓰기: 운영자만 UPSERT 가능. 익명 사용자는 Storage 직접 업로드 불가.
+
+
+----------------------------------------------------------------------------------------
+
 
 ## 프론트엔드 트리구조
 
@@ -214,42 +316,5 @@ frontend/src/app
     globals.css             // 전역css
     layout.tsx              // 공통 레이아웃 (헤더푸터)
 
----
 
-## 🔐 보안 & 권한 설계
-
-1. 운영자 인증: Supabase Auth + 서버(Express) 세션 검증 방식
-
-- 운영자는 Supabase Auth 이메일 로그인 사용.
-- 프론트가 로그인 성공 → **백엔드(Express)**로 토큰 전달.
-- 백엔드가 Supabase 서버 SDK로 사용자 정보 확인 → 운영자인지 검증.
-- 맞으면 백엔드가 HttpOnly 쿠키 발급.  
-  (이 쿠키가 서비스 전체에서 “관리자 인증” 역할)
-▶️ 즉, **운영자 인증 = Supabase Auth → Express 서버가 최종 인증자**
-
-
-2. 게시물 CRUD 권한: Express 백엔드에서 Supabase Service Role 키 사용
-
-- 운영자 권한이 필요한 작업은 모두 Express 서버를 통해 처리.
-- 서버는 쿠키 검사 → 관리자면 service_role로 DB 수정.
-▶️ 즉, **Service Role = 서버 전용. 절대 공개 금지.**
-
-
-3. 일반 사용자 (로그인 없음)
-
-- 읽기(read): Supabase anon-key로 클라이언트에서 직접 가능.
-- 쓰기(write): 반드시 Express 백엔드 거쳐서.
-    ㄴ> 댓글 쓰기는 백엔드에서 rate limit + 필터링 후 DB 반영.  
-    ㄴ> 익명 사용자이므로 직접 DB write는 위험 → 서버로 우회.
-▶️ 즉, **익명 사용자는 DB 읽기만 직접 가능. 모든 쓰기는 백엔드 API 통해서만 허용.**
-
-
-4. Zustand 상태 관리: 진짜 관리자 인증은 서버 쿠키로만 판단.
-▶️ 즉, **Zustand는 단순 UI 표시용. 보안 판단은 서버 세션으로만.**
-
-
-5. 보안 설계 결론
-- 운영자 인증은 Supabase Auth → Express 서버 검증 + HttpOnly 쿠키.
-- DB 쓰기 권한은 서버에서 Service Role로 처리.
-- 일반 사용자는 anon-key로 읽기만 가능하고, 쓰기는 백엔드로만.
-- Service Role Key는 브라우저 번들에 절대 실리지 않도록 엄격히 관리.
+----------------------------------------------------------------------------------------
