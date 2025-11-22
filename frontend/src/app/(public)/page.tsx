@@ -77,7 +77,11 @@ export default async function Page() {
                                     {(t.thumbnails ?? []).slice(0, 2).map((src, idx) => (
                                         <div
                                             key={idx}
-                                            className="h-90 w-90 overflow-hidden rounded-md border border-border/60 bg-muted"
+                                            className="
+                                            h-50 w-50           // 스마트폰
+                                            sm:h-70 sm:w-70     // 태블릿
+                                            lg:h-90 lg:w-90     // 데스크탑
+                                            overflow-hidden rounded-md border border-border/60 bg-muted"
                                         >
                                             <img
                                                 src={src}
