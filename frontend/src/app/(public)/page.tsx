@@ -5,70 +5,90 @@
 
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
-import { Skeleton } from "@/components/ui";
 
-async function getTournaments() {
-    const { data, error } = await supabase
+type TournamentWithThumbnails = {
+    id: string;
+    short_id: number;
+    title: string;
+    description: string | null;
+    created_at: string;
+    thumbnails: string[]; // 해당 월드컵 이미지 중 최대 2장
+};
+
+async function getTournaments(): Promise<TournamentWithThumbnails[]> {
+    // 1) 토너먼트 목록 (uuid 포함) 조회
+    const { data: tournaments, error } = await supabase
         .from("tournaments")
-        .select("short_id, title, description, created_at")
+        .select("id, short_id, title, description, created_at")
         .order("created_at", { ascending: false });
 
-    if (error) {
+    if (error || !tournaments) {
         console.error(error);
         return [];
     }
-    return data ?? [];
-}
 
+    // 2) 각 토너먼트별로 이미지 최대 2장씩 가져오기
+    const result: TournamentWithThumbnails[] = [];
 
+    for (const t of tournaments) {
+        const { data: images, error: imgError } = await supabase
+            .from("images")
+            .select("image_url")
+            .eq("tournament_id", t.id)
+            .order("created_at", { ascending: true })
+            .limit(2);
 
-// ✅ 스켈레톤 리스트 (게시물 카드 모양만 미리 보기용)
-function TournamentListSkeleton({ count = 5 }: { count?: number }) {
-    return (
-        <ul className="space-y-3">
-            {Array.from({ length: count }).map((_, i) => (
-                <li
-                    key={i}
-                    className="rounded-xl border border-border/60 bg-card/60 px-4 py-3"
-                >
-                    <div className="space-y-2">
-                        {/* 제목 자리 */}
-                        <Skeleton className="h-5 w-40" />
-                        {/* 설명 자리 */}
-                        <Skeleton className="h-4 w-full" />
-                        {/* 날짜 자리 */}
-                        <Skeleton className="h-3 w-24" />
-                    </div>
-                </li>
-            ))}
-        </ul>
-    );
+        if (imgError) {
+            console.error(imgError);
+        }
+
+        result.push({
+            ...t,
+            thumbnails: (images ?? []).map((img) => img.image_url),
+        });
+    }
+
+    return result;
 }
 
 export default async function Page() {
     const tournaments = await getTournaments();
-    const hasData = tournaments.length > 0;
 
     return (
         <section className="space-y-6">
             <header className="space-y-1">
-                <h1 className="text-2xl font-semibold tracking-tight">
-                    이상형 월드컵
-                </h1>
+                <h1 className="text-2xl font-semibold tracking-tight">이상형 월드컵</h1>
                 <p className="text-sm text-muted-foreground">
-                    다양한 월드컵을 플레이하고, 당신의 이상형을 골라보세요.
+                    다양한 월드컵을 플레이하고, 당신의 원픽을 골라보세요.
                 </p>
             </header>
 
-            {/* 데이터 있으면 게시물 보이고, 없으면 스켈레톤 */}
-            {hasData ? (
-                <ul className="space-y-3">
-                    {tournaments.map((t: any) => (
-                        <li
-                            key={t.short_id}
-                            className="rounded-xl border border-border/60 bg-card/60 px-4 py-3 transition hover:border-primary/60 hover:bg-accent/60"
-                        >
-                            <Link href={`/worldcup/${t.short_id}`}>
+            {/* 게시물 카드 부분 (데이터 없어도 그냥 빈 리스트) */}
+            <ul className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                {tournaments.map((t) => (
+                    <li
+                        key={t.short_id}
+                        className="rounded-xl border border-border/60 bg-card/60 px-4 py-3 transition hover:border-primary/60 hover:bg-accent/60"
+                    >
+                        <Link href={`/worldcup/${t.short_id}`}>
+                            <div className="flex flex-col gap-3">
+                                {/* 위쪽: 썸네일 두 장, 서로 간격 있게 배치 */}
+                                <div className="flex gap-2">
+                                    {(t.thumbnails ?? []).slice(0, 2).map((src, idx) => (
+                                        <div
+                                            key={idx}
+                                            className="h-90 w-90 overflow-hidden rounded-md border border-border/60 bg-muted"
+                                        >
+                                            <img
+                                                src={src}
+                                                alt="월드컵 썸네일"
+                                                className="h-full w-full object-cover"
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* 아래쪽: 텍스트 영역 */}
                                 <div className="space-y-1">
                                     <h2 className="text-base font-medium text-foreground">
                                         {t.title}
@@ -82,13 +102,11 @@ export default async function Page() {
                                         {new Date(t.created_at).toLocaleString()}
                                     </p>
                                 </div>
-                            </Link>
-                        </li>
-                    ))}
-                </ul>
-            ) : (
-                <TournamentListSkeleton count={5} />
-            )}
+                            </div>
+                        </Link>
+                    </li>
+                ))}
+            </ul>
         </section>
     );
 }
