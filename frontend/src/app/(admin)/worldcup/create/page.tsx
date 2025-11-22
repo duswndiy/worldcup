@@ -189,7 +189,7 @@ function CreateWorldcupPage() {
             const imagesPayload = await uploadImagesToSupabase(files);
 
             // 2) 업로드된 이미지 경로만 서버(Express)로 전달
-            const res = await fetch(`${API_BASE_URL}/admin/tournaments`, {
+            const res = await fetch(`${API_BASE_URL}/admin/worldcup`, {
                 method: "POST",
                 credentials: "include", // 관리자 쿠키
                 headers: {

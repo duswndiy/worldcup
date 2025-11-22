@@ -7,7 +7,7 @@ import { supabaseAdmin } from "../supabaseClient";
 const router = Router();
 
 // 월드컵(토너먼트) 생성 API
-router.post("/tournaments", requireAdmin, async (req, res) => {
+router.post("/worldcup", requireAdmin, async (req, res) => {
     const { title, description, images } = req.body as {
         title?: string;
         description?: string;

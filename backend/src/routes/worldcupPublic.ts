@@ -39,10 +39,10 @@ async function getTournamentUuidByShortId(
 
 /*
  * 우승 결과 저장
- * POST /public/tournaments/:id/result
+ * POST /public/worldcup/:id/result
  * body: { winnerImageId: string, winnerName: string }
  */
-router.post("/tournaments/:id/result", async (req, res) => {
+router.post("/worldcup/:id/result", async (req, res) => {
     const { error, tournamentId } = await getTournamentUuidByShortId(req.params.id);
     if (error === "invalid") {
         return res.status(400).json({ error: "invalid id" });
@@ -80,9 +80,9 @@ router.post("/tournaments/:id/result", async (req, res) => {
 
 /*
  * 우승 결과 조회 + 우승 이미지 경로 포함
- * GET /public/tournaments/:id/result
+ * GET /public/worldcup/:id/result
  */
-router.get("/tournaments/:id/result", async (req, res) => {
+router.get("/worldcup/:id/result", async (req, res) => {
     const { error, tournamentId } = await getTournamentUuidByShortId(req.params.id);
     if (error === "invalid") {
         return res.status(400).json({ error: "invalid id" });
