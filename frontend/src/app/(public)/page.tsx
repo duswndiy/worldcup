@@ -10,7 +10,7 @@ import { Skeleton } from "@/components/ui";
 async function getTournaments() {
     const { data, error } = await supabase
         .from("tournaments")
-        .select("id, title, description, created_at")
+        .select("short_id, title, description, created_at")
         .order("created_at", { ascending: false });
 
     if (error) {
@@ -65,10 +65,10 @@ export default async function Page() {
                 <ul className="space-y-3">
                     {tournaments.map((t: any) => (
                         <li
-                            key={t.id}
+                            key={t.short_id}
                             className="rounded-xl border border-border/60 bg-card/60 px-4 py-3 transition hover:border-primary/60 hover:bg-accent/60"
                         >
-                            <Link href={`/worldcup/${t.id}`}>
+                            <Link href={`/worldcup/${t.short_id}`}>
                                 <div className="space-y-1">
                                     <h2 className="text-base font-medium text-foreground">
                                         {t.title}
