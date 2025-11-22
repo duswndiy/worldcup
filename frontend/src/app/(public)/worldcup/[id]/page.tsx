@@ -162,7 +162,7 @@ export default function WorldcupGamePage() {
     // 우승자 UI
     if (winner) {
         return (
-            <main className="flex flex-col items-center justify-center min-h-screen">
+            <main className="flex flex-col items-center justify-center">
                 <h1 className="text-2xl font-bold mb-4">우승자 🎉</h1>
                 <img
                     src={winner.image_url}
@@ -184,7 +184,7 @@ export default function WorldcupGamePage() {
 
     // 진행중 UI
     return (
-        <main className="flex flex-col items-center justify-center min-h-screen">
+        <main className="flex flex-col items-center justify-center">
             <h1 className="text-xl font-bold mb-4">
                 {currentRound}강 {currentIndex + 1} / {currentRound / 2}
             </h1>
@@ -199,7 +199,13 @@ export default function WorldcupGamePage() {
                             <img
                                 src={item.image_url}
                                 alt={item.name}
-                                className="w-64 h-64 object-cover rounded-md"
+                                className="
+                                h-50 w-50
+                                sm:h-70 sm:w-70
+                                md:h-100 md:w-100
+                                lg:h-160 lg:w-160
+                                object-cover rounded-md
+                                "
                             />
                             <span className="mt-2 font-medium">{item.name}</span>
                         </button>
