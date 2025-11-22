@@ -9,7 +9,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <body className="min-h-screen bg-background text-foreground antialiased">
         <ThemeProvider>
             <Header />
-            <main className="mx-auto max-w-[1500px] min-h-[1300px] rounded-xl border mt-2 mb-6 p-14">{children}</main>
+            <main className="mx-auto max-w-[1500px] min-h-[1200px] rounded-xl border p-10">{children}</main>
             <Footer />
         </ThemeProvider>
         </body>

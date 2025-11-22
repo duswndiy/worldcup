@@ -63,16 +63,16 @@ export default async function Page() {
                 </p>
             </header>
 
-            {/* 게시물 카드 부분 (데이터 없어도 그냥 빈 리스트) */}
+            {/* 게시물 카드 부분 */}
             <ul className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 {tournaments.map((t) => (
                     <li
                         key={t.short_id}
-                        className="rounded-xl border border-border/60 bg-card/60 px-4 py-3 transition hover:border-primary/60 hover:bg-accent/60"
+                        className="rounded-xl border border-border/60 bg-card/60 px-4 py-3 transition hover:border-primary/60 hover:bg-accent/60 "
                     >
                         <Link href={`/worldcup/${t.short_id}`}>
                             <div className="flex flex-col gap-3">
-                                {/* 위쪽: 썸네일 두 장, 서로 간격 있게 배치 */}
+                                {/* 위쪽: 썸네일 두 장 */}
                                 <div className="flex gap-2">
                                     {(t.thumbnails ?? []).slice(0, 2).map((src, idx) => (
                                         <div
@@ -93,18 +93,13 @@ export default async function Page() {
                                 </div>
 
                                 {/* 아래쪽: 텍스트 영역 */}
-                                <div className="space-y-1">
-                                    <h2 className="text-base font-medium text-foreground">
-                                        {t.title}
-                                    </h2>
+                                <div>
+                                    <h2 className="text-lg font-bold text-foreground p-1">{t.title}</h2>
                                     {t.description && (
-                                        <p className="text-sm text-muted-foreground">
+                                        <p className="text-sm text-muted-foreground pl-1 pb-1">
                                             {t.description}
                                         </p>
                                     )}
-                                    <p className="mt-1 text-xs text-muted-foreground">
-                                        {new Date(t.created_at).toLocaleString()}
-                                    </p>
                                 </div>
                             </div>
                         </Link>
