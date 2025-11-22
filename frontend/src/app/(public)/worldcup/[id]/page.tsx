@@ -1,7 +1,9 @@
 // 게임 페이지:
-// - images 테이블 -> 해당 tournament_id의 후보 읽어서 -> 32강 토너먼트 진행
+// - URL 의 [id] 는 tournaments.short_id (숫자)
+// - 실제 DB 조인에는 tournaments.id (uuid)를 사용
+// - images 테이블 -> 해당 tournament_id(uuid)의 후보 읽어서 -> 32강 토너먼트 진행
 // - 각 라운드마다 랜덤 1:1 매치 -> 승자만 다음 라운드로
-// - 최종 우승자 결정 후 백엔드 /public/tournaments/:id/result로 POST
+// - 최종 우승자 결정 후 백엔드 /public/tournaments/:id/result 로 POST (여기서 :id 는 short_id)
 
 "use client";
 
@@ -23,7 +25,7 @@ function shuffle<T>(arr: T[]): T[] {
 export default function WorldcupGamePage() {
     const params = useParams<{ id: string }>();
     const router = useRouter();
-    const tournamentId = params.id;
+    const tournamentShortId = params.id; // URL 에 보이는 숫자 ID
 
     const [candidates, setCandidates] = useState<ImageCandidate[]>([]);
     const [currentRound, setCurrentRound] = useState(32);
@@ -41,10 +43,36 @@ export default function WorldcupGamePage() {
     useEffect(() => {
         const fetchImages = async () => {
             setLoading(true);
+
+            // 1) short_id(숫자) → tournaments.id(uuid) 변환
+            const numericId = Number(tournamentShortId);
+            if (!Number.isInteger(numericId)) {
+                console.error("잘못된 월드컵 ID:", tournamentShortId);
+                alert("잘못된 월드컵 주소입니다.");
+                setLoading(false);
+                return;
+            }
+
+            const { data: tournament, error: tError } = await supabase
+                .from("tournaments")
+                .select("id")
+                .eq("short_id", numericId)
+                .maybeSingle();
+
+            if (tError || !tournament) {
+                console.error(tError);
+                alert("해당 월드컵을 찾을 수 없습니다.");
+                setLoading(false);
+                return;
+            }
+
+            const tournamentUuid = tournament.id as string;
+
+            // 2) uuid 기준으로 images 조회
             const { data, error } = await supabase
                 .from("images")
                 .select("id, name, image_url")
-                .eq("tournament_id", tournamentId)
+                .eq("tournament_id", tournamentUuid)
                 .order("created_at", { ascending: true });
 
             if (error) {
@@ -73,7 +101,7 @@ export default function WorldcupGamePage() {
         };
 
         fetchImages();
-    }, [tournamentId]);
+    }, [tournamentShortId]);
 
     const currentPair = useMemo(() => {
         const left = currentRoundCandidates[currentIndex * 2];
@@ -102,13 +130,15 @@ export default function WorldcupGamePage() {
             setWinner(picked);
 
             try {
-                await apiPost(`/public/tournaments/${tournamentId}/result`, {
+                // 여기서 :id 는 short_id 로 보내고,
+                // 백엔드에서 다시 uuid 로 변환해서 results 테이블에 저장한다.
+                await apiPost(`/public/tournaments/${tournamentShortId}/result`, {
                     winnerImageId: picked.id,
                     winnerName: picked.name,
                 });
 
-                // 결과 페이지로 이동
-                router.push(`/worldcup/${tournamentId}/result`);
+                // 결과 페이지로 이동 (/worldcup/[id]/result 의 [id] 도 short_id)
+                router.push(`/worldcup/${tournamentShortId}/result`);
             } catch (err) {
                 console.error(err);
                 // 실패해도 게임은 끝났으니 우승자만 보여줌
@@ -142,7 +172,9 @@ export default function WorldcupGamePage() {
                 <p className="text-lg font-semibold">{winner.name}</p>
                 <button
                     className="mt-6 px-4 py-2 border rounded-md"
-                    onClick={() => router.push(`/worldcup/${tournamentId}/result`)}
+                    onClick={() =>
+                        router.push(`/worldcup/${tournamentShortId}/result`)
+                    }
                 >
                     결과 페이지로 이동
                 </button>

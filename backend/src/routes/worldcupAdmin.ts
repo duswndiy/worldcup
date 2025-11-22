@@ -27,7 +27,7 @@ router.post("/tournaments", requireAdmin, async (req, res) => {
             title,
             description,
         })
-        .select()
+        .select("id, short_id")
         .single();
 
     if (tError || !tournament) {
@@ -35,7 +35,8 @@ router.post("/tournaments", requireAdmin, async (req, res) => {
         return res.status(500).json({ error: "tournament 생성 실패" });
     }
 
-    const tournamentId = tournament.id as string;
+    const tournamentId = tournament.id as string;               // DB인식용 UUID
+    const tournamentShortId = tournament.short_id as number;    // 프론트용 int8
 
     // 2) images 테이블에 insert (Storage에 이미 올라간 경로 활용)
     const imageRows = images.map((img) => ({
@@ -51,7 +52,7 @@ router.post("/tournaments", requireAdmin, async (req, res) => {
         return res.status(500).json({ error: "images insert 실패" });
     }
 
-    return res.json({ id: tournamentId });
+    return res.json({ id: tournamentShortId });                 // 프론트에는 short_id 칼럼 값만 전달
 });
 
 export default router;

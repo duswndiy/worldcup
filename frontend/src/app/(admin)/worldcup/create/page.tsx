@@ -12,12 +12,8 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui";
 import { supabase } from "@/lib/supabaseClient";
 
-const API_BASE_URL =
-    process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:4000";
-
-// Supabase Storage 버킷 이름 (예: "worldcup-images")
-const SUPABASE_BUCKET =
-    process.env.NEXT_PUBLIC_SUPABASE_BUCKET ?? "images";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:4000";
+const SUPABASE_BUCKET = process.env.NEXT_PUBLIC_SUPABASE_BUCKET ?? "images";
 
 // GIF / 움짤 여부 간단 체크
 const isGif = (file: File) =>
@@ -182,7 +178,7 @@ function CreateWorldcupPage() {
         e.preventDefault();
         setError(null);
 
-        if (files.length < 1) {
+        if (files.length < 32) {
             setError("이미지는 최소 32장 이상 업로드해야 합니다.");
             return;
         }
