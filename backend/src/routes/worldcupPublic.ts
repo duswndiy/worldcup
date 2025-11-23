@@ -170,7 +170,14 @@ router.post("/worldcup/:id/comments", async (req, res) => {
         content?: string;
     };
 
-    if (!content || !content.trim()) {
+    const trimmedContent = (content ?? "").trim();
+    // 닉네임이 비어 있으면 DB에 null 말고 "익명"으로 넣기
+    const safeNickname =
+        typeof nickname === "string" && nickname.trim().length > 0
+            ? nickname.trim()
+            : "익명";
+
+    if (!trimmedContent) {
         return res.status(400).json({ error: "content is required" });
     }
 
@@ -179,8 +186,8 @@ router.post("/worldcup/:id/comments", async (req, res) => {
         .from("comments")
         .insert({
             tournament_id: tournamentId, // uuid 로 저장
-            nickname: nickname ?? null,
-            content,
+            nickname: safeNickname,
+            content: trimmedContent
         })
         .select()
         .single();
