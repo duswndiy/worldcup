@@ -126,9 +126,9 @@ router.get("/worldcup/:id/result", async (req, res) => {
 
 /*
  * 댓글 조회
- * GET /public/tournaments/:id/comments
+ * GET /public/worldcup/:id/comments
  */
-router.get("/tournaments/:id/comments", async (req, res) => {
+router.get("/worldcup/:id/comments", async (req, res) => {
     const { error, tournamentId } = await getTournamentUuidByShortId(req.params.id);
     if (error === "invalid") {
         return res.status(400).json({ error: "invalid id" });
@@ -153,10 +153,10 @@ router.get("/tournaments/:id/comments", async (req, res) => {
 
 /*
  * 댓글 작성 (익명)
- * POST /public/tournaments/:id/comments
+ * POST /public/worldcup/:id/comments
  * body: { nickname?: string, content: string }
  */
-router.post("/tournaments/:id/comments", async (req, res) => {
+router.post("/worldcup/:id/comments", async (req, res) => {
     const { error, tournamentId } = await getTournamentUuidByShortId(req.params.id);
     if (error === "invalid") {
         return res.status(400).json({ error: "invalid id" });

@@ -1,6 +1,6 @@
 // 결과 + 댓글 페이지:
 // - results 테이블에서 -> 우승 결과 읽기
-// - 댓글 목록/ 댓글 작성은 백엔드 /public/tournaments/:id/comments 사용 ( write는 서버 경유 )
+// - 댓글 목록/ 댓글 작성은 백엔드 /public/worldcup/:id/comments 사용 ( write는 서버 경유 )
 // - 추후 카카오톡 공유 버튼 추가하기
 
 "use client";
