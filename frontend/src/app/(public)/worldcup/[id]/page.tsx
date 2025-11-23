@@ -27,15 +27,10 @@ export default function WorldcupGamePage() {
     const router = useRouter();
     const tournamentShortId = params.id; // URL 에 보이는 숫자 ID
 
-    const [candidates, setCandidates] = useState<ImageCandidate[]>([]);
     const [currentRound, setCurrentRound] = useState(32);
     const [currentIndex, setCurrentIndex] = useState(0);
-    const [currentRoundCandidates, setCurrentRoundCandidates] = useState<
-        ImageCandidate[]
-    >([]);
-    const [nextRoundCandidates, setNextRoundCandidates] = useState<
-        ImageCandidate[]
-    >([]);
+    const [currentRoundCandidates, setCurrentRoundCandidates] = useState<ImageCandidate[]>([]);
+    const [nextRoundCandidates, setNextRoundCandidates] = useState<ImageCandidate[]>([]);
     const [winner, setWinner] = useState<ImageCandidate | null>(null);
     const [loading, setLoading] = useState(true);
 
@@ -91,7 +86,6 @@ export default function WorldcupGamePage() {
             }
 
             const initial = shuffle(list).slice(0, 32);
-            setCandidates(initial);
             setCurrentRoundCandidates(initial);
             setCurrentRound(32);
             setCurrentIndex(0);
@@ -111,9 +105,6 @@ export default function WorldcupGamePage() {
     }, [currentRoundCandidates, currentIndex]);
 
     const handlePick = async (picked: ImageCandidate) => {
-        // 우승자 확정 후
-        if (winner) return;
-
         const newNextRound = [...nextRoundCandidates, picked];
         const pairsInRound = currentRound / 2;
         const isLastPair = currentIndex + 1 >= pairsInRound;
@@ -124,24 +115,20 @@ export default function WorldcupGamePage() {
             return;
         }
 
-        // 라운드 종료 -> 다음 라운드로 넘어가기
+        // 마지막 페어 처리
         if (currentRound === 2) {
-            // 결승이 끝난 경우 -> 최종 우승자
-            setWinner(picked);
-
+            // ✅ 게임 종료 -> 결과 저장 요청 후 결과 페이지로 리다이렉트
             try {
-                // 여기서 :id 는 short_id 로 보내고,
-                // 백엔드에서 다시 uuid 로 변환해서 results 테이블에 저장한다.
-                await apiPost(`/public/tournaments/${tournamentShortId}/result`, {
+                await apiPost(`/public/worldcup/${tournamentShortId}/result`, {
                     winnerImageId: picked.id,
                     winnerName: picked.name,
                 });
-
-                // 결과 페이지로 이동 (/worldcup/[id]/result 의 [id] 도 short_id)
-                router.push(`/worldcup/${tournamentShortId}/result`);
             } catch (err) {
                 console.error(err);
-                // 실패해도 게임은 끝났으니 우승자만 보여줌
+                alert("결과 저장 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+            } finally {
+                // 결과 저장 성공/실패와 관계없이 결과 페이지로 이동
+                router.push(`/worldcup/${tournamentShortId}/result`);
             }
 
             return;
@@ -156,31 +143,7 @@ export default function WorldcupGamePage() {
     };
 
     if (loading) return <div className="p-4">로딩 중...</div>;
-    if (!currentPair && !winner)
-        return <div className="p-4">후보를 불러올 수 없습니다.</div>;
-
-    // 우승자 UI
-    if (winner) {
-        return (
-            <main className="flex flex-col items-center justify-center">
-                <h1 className="text-2xl font-bold mb-4">우승자 🎉</h1>
-                <img
-                    src={winner.image_url}
-                    alt={winner.name}
-                    className="w-64 h-64 object-cover rounded-md mb-3"
-                />
-                <p className="text-lg font-semibold">{winner.name}</p>
-                <button
-                    className="mt-6 px-4 py-2 border rounded-md"
-                    onClick={() =>
-                        router.push(`/worldcup/${tournamentShortId}/result`)
-                    }
-                >
-                    결과 페이지로 이동
-                </button>
-            </main>
-        );
-    }
+    if (!currentPair) return <div className="p-4">후보를 불러올 수 없습니다.</div>;
 
     // 진행중 UI
     return (
