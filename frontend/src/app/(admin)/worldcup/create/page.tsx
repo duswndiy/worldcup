@@ -84,7 +84,6 @@ type UploadedImageInfo = {
     name: string;
 };
 
-// Supabase Storage에 여러 장 업로드 후, 서버에 보낼 images payload 생성
 async function uploadImagesToSupabase(
     files: File[],
 ): Promise<UploadedImageInfo[]> {
@@ -101,12 +100,17 @@ async function uploadImagesToSupabase(
         // 확장자 뺀 이름
         const baseName = originalName.replace(/\.[^.]+$/, "");
 
-        // 한글/특수문자 등을 ASCII 범위로 슬러그화
-        // 1) 유니코드 분해
-        // 2) 영문/숫자/언더스코어/대시만 남기고 나머지는 '_' 로 치환
+        // ✅ 표시용 이름: 너무 길면 잘라주기 (ex. 30글자)
+        const DISPLAY_NAME_MAX = 30;
+        const displayName =
+            baseName.length > DISPLAY_NAME_MAX
+                ? baseName.slice(0, DISPLAY_NAME_MAX) + "…"
+                : baseName;
+
+        // 업로드용 파일 경로 슬러그 (영문/숫자만)
         const slug = baseName
             .normalize("NFKD")
-            .replace(/[^\w\-]+/g, "_"); // \w = [A-Za-z0-9_]
+            .replace(/[^\w\-]+/g, "_");
 
         const safeBase = slug || "image";
         const filePath = `tournaments/${Date.now()}-${i}-${safeBase}.${ext}`;
@@ -123,16 +127,16 @@ async function uploadImagesToSupabase(
             throw new Error("이미지 업로드에 실패했습니다. 다시 시도해 주세요.");
         }
 
-        // public URL 생성 (버킷이 public이어야 함)
         const { data: publicUrlData } = supabase.storage
             .from(SUPABASE_BUCKET)
             .getPublicUrl(data.path);
 
         const publicUrl = publicUrlData.publicUrl;
 
+
         results.push({
-            path: publicUrl,   // 👉 이미지 경로 (영어/숫자만 들어가는 안전한 URL)
-            name: originalName // 👉 여기에는 한글/영어/숫자 전부 허용 (DB용, UI 표출용)
+            path: publicUrl,
+            name: displayName
         });
     }
 
