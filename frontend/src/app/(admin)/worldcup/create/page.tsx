@@ -210,9 +210,8 @@ function CreateWorldcupPage() {
                 throw new Error(`생성 실패: ${res.status}`);
             }
 
-            const data = await res.json();
-            const createdId = data.id as string;
-            router.push(`/worldcup/${createdId}`);
+            // 게시물 생성 후 루트페이지로 이동
+            router.push("/");
         } catch (err: any) {
             console.error(err);
             setError(err.message ?? "월드컵 생성 중 오류가 발생했습니다.");
