@@ -261,7 +261,7 @@
 - 일반 사용자 (로그인 불필요)
 
 ┌ 읽기(read):
-    ㄴ> Supabase "anon-key"로 클라이언트에서 직접 가능.
+    ㄴ> Supabase "anon-key"로 클라이언트에서 직접 가능. (실제 구현은 쓰기와 마찬가지로 서버 경유로 해 놓음)
     ㄴ> "tournaments", "images", "results", "comments" 테이블 read-only로 사용.
 └ 쓰기(write):
     ㄴ> 댓글 쓰기, 결과 저장 등은 반드시 Express 백엔드 거쳐서.
