@@ -1,3 +1,6 @@
+// 월드컵 전용 로직이라서, features/worldcup 밑에 뒀음.
+
+// Supabase에 이미지 업로드 + API 호출
 import { supabase } from "@/lib/supabaseClient";
 
 const SUPABASE_BUCKET =

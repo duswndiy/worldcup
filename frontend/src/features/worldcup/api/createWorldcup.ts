@@ -1,3 +1,4 @@
+// Express 서버 호출
 import { UploadedImageInfo } from "./uploadImagesToSupabase";
 
 const API_BASE_URL =

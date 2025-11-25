@@ -1,3 +1,6 @@
+// 게시물 생성하는 페이지에서(create/page.tsx),
+// 파일 첨부 + 미리보기 영역 담당.
+
 "use client";
 
 import { ChangeEvent } from "react";
