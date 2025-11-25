@@ -9,7 +9,7 @@
 
 import { FormEvent, useState, ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui";
+import { Button, Input, Textarea, Label } from "@/components/ui/index";
 import { supabase } from "@/lib/supabaseClient";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:4000";
@@ -149,8 +149,9 @@ function CreateWorldcupPage() {
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
     const [files, setFiles] = useState<File[]>([]);
-    const [pending, setPending] = useState(false); // 생성 요청 중
-    const [converting, setConverting] = useState(false); // webp 변환 중
+    const [previewUrls, setPreviewUrls] = useState<string[]>([]);   // 미리보기 url
+    const [pending, setPending] = useState(false);                  // 생성 요청 중
+    const [converting, setConverting] = useState(false);            // webp 변환 중
     const [error, setError] = useState<string | null>(null);
 
     const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
@@ -159,23 +160,50 @@ function CreateWorldcupPage() {
         const selectedFiles = Array.from(e.target.files);
         setError(null);
 
-        // 1) 움짤(GIF) 차단
+        // 1) 움짤(GIF) 차단 (기존 선택은 유지)
         if (selectedFiles.some(isGif)) {
-            setFiles([]);
-            setError(
-                "움짤(GIF 등)은 아직 지원하지 않습니다. 정적인 이미지 파일만 업로드해 주세요.",
-            );
+            setError("움짤(gif)은 아직 지원하지 않습니다. 정적인 이미지 파일만 업로드해 주세요.");
+            e.target.value = "";
             return;
         }
 
         // 2) webp 변환 시작
         setConverting(true);
         try {
+            // 새로 고른 파일만 변환
             const converted = await convertImagesToWebP(selectedFiles);
-            setFiles(converted);
+
+            // ✅ 기존 선택 + 새 선택 누적
+            setFiles((prev) => [...prev, ...converted]);
+
+            // ✅ 새 미리보기 URL 생성 후 누적
+            const newUrls = converted.map((file) => URL.createObjectURL(file));
+            setPreviewUrls((prev) => [...prev, ...newUrls]);
+
+            // 같은 파일을 다시 선택할 수 있도록 value 초기화
+            e.target.value = "";
         } finally {
             setConverting(false);
         }
+    };
+
+    // ✅ 개별 이미지 삭제 핸들러
+    const handleRemoveImage = (index: number) => {
+        setFiles((prev) => prev.filter((_, i) => i !== index));
+        setPreviewUrls((prev) => {
+            const urlToRevoke = prev[index];
+            if (urlToRevoke) URL.revokeObjectURL(urlToRevoke);
+            return prev.filter((_, i) => i !== index);
+        });
+    };
+
+    // ✅ 전체 이미지 일괄 삭제 핸들러
+    const handleClearImages = () => {
+        setFiles([]);
+        setPreviewUrls((prev) => {
+            prev.forEach((url) => URL.revokeObjectURL(url));
+            return [];
+        });
     };
 
     const handleSubmit = async (e: FormEvent) => {
@@ -221,56 +249,119 @@ function CreateWorldcupPage() {
     };
 
     return (
-        <main className="max-w-2xl mx-auto py-10">
-            <h1 className="text-2xl font-bold mb-6">새 월드컵 생성하기</h1>
+        <main className="max-w-[1200px] mx-auto rounded-xl border border-border p-14 my-40">
+            <h1 className="text-2xl font-bold mb-18 text-center">새로운 월드컵 생성하기</h1>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-10">
                 <div>
-                    <label className="block text-sm mb-1">제목</label>
-                    <input
-                        className="w-full border px-3 py-2 rounded-md"
+                    <Label htmlFor="title" className="block text-sm mb-2">제목</Label>
+                    <Input
+                        id="title"
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
-                        placeholder="예: 최애 라면 월드컵"
+                        placeholder="예시 : 레전드 치킨 월드컵"
                         required
                     />
                 </div>
 
                 <div>
-                    <label className="block text-sm mb-1">설명 (선택)</label>
-                    <textarea
-                        className="w-full border px-3 py-2 rounded-md"
+                    <Label htmlFor="description" className="block text-sm mb-2">설명 (선택)</Label>
+                    <Textarea
+                        id="description"
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
                         placeholder="월드컵에 대한 간단한 설명을 적어주세요."
-                        rows={3}
+                        rows={2}
                     />
                 </div>
 
                 <div>
-                    <label className="block text-sm mb-1">
-                        이미지 (최소 32장, 업로드 시 webp 자동 변환)
-                    </label>
-                    <input
-                        type="file"
-                        accept="image/*"
-                        multiple
-                        onChange={handleFileChange}
-                        className="block w-full text-sm"
-                    />
-                    <p className="mt-1 text-xs text-gray-500">
-                        현재 선택된 이미지 수: {files.length}장
-                        <br />
-                        정적인 이미지는 업로드 시 가능하면 자동으로 webp로 변환된 뒤
-                        Supabase Storage에 저장됩니다.
-                        <br />
-                        움짤(GIF 등)은 아직 지원하지 않습니다.
-                    </p>
-                    {converting && (
-                        <p className="mt-1 text-xs text-blue-500">
-                            이미지 변환 중입니다...
-                        </p>
-                    )}
+                    <Label
+                        htmlFor="images"
+                        className="block text-sm mb-2"
+                    >
+                        이미지 (최소 32장)
+                    </Label>
+
+                    {/* 카드 형태로 감싼 첨부 영역 */}
+                    <div className="mt-4 space-y-4 rounded-lg border border-dashed border-border bg-muted/30 p-6">
+                        {/* 파일 첨부하기 버튼 + 선택 개수 + 전체 삭제 버튼 */}
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <Input
+                                    id="images"
+                                    type="file"
+                                    accept="image/*"
+                                    multiple
+                                    onChange={handleFileChange}
+                                    className="hidden"
+                                />
+
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    className="cursor-pointer"
+                                    onClick={() =>
+                                        document.getElementById("images")?.click()
+                                    }
+                                >
+                                    파일 첨부하기
+                                </Button>
+
+                                <p className="text-xs text-muted-foreground ml-2">
+                                    {files.length > 0
+                                        ? `${files.length}장 선택됨`
+                                        : "최소 32장의 이미지를 첨부해 주세요."}
+                                </p>
+                            </div>
+
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={handleClearImages}
+                                disabled={files.length === 0}
+                                className="text-xs text-muted-foreground hover:text-destructive"
+                            >
+                                전체 삭제
+                            </Button>
+                        </div>
+
+
+                        {/* 이미지 미리보기 영역 */}
+                        {previewUrls.length > 0 && (
+                            <div className="mt-6 grid grid-cols-8 gap-3">
+                                {previewUrls.map((url, idx) => (
+                                    <div
+                                        key={idx}
+                                        className="relative aspect-square overflow-hidden rounded-md border border-border bg-muted"
+                                    >
+                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                        <img
+                                            src={url}
+                                            alt={`preview-${idx}`}
+                                            className="h-full w-full object-cover"
+                                        />
+
+                                        <button
+                                            type="button"
+                                            onClick={() => handleRemoveImage(idx)}
+                                            className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-black/70 text-xs text-white hover:bg-black"
+                                        >
+                                            ×
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
+
+                        {converting && (
+                            <p className="mt-1 text-xs text-blue-500">
+                                이미지 변환 중입니다...
+                            </p>
+                        )}
+                    </div>
                 </div>
 
                 {error && <p className="text-sm text-red-500">{error}</p>}
@@ -278,7 +369,7 @@ function CreateWorldcupPage() {
                 <Button
                     type="submit"
                     disabled={pending || converting}
-                    className="w-full"
+                    className="w-full cursor-pointer bg-[#39ff14]/70 hover:bg-[#32e012] text-black mt-4"
                 >
                     {pending ? "생성 중..." : "월드컵 생성하기"}
                 </Button>
