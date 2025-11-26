@@ -199,7 +199,7 @@ export default function WorldcupGamePage() {
 
             {/* 이미지 영역 */}
             {currentPair && (
-                <div className="flex gap-6">
+                <div className="flex gap-5">
                     {[currentPair.left, currentPair.right].map((item) => (
                         <button
                             key={item.id}
@@ -217,7 +217,7 @@ export default function WorldcupGamePage() {
                                 object-cover rounded-md
                                 "
                             />
-                            <span className="mt-2 font-medium">{item.name}</span>
+                            <span className="mt-4 text-large">{item.name}</span>
                         </button>
                     ))}
                 </div>
