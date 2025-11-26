@@ -159,14 +159,19 @@ export default function WorldcupGamePage() {
     // 진행중 UI
     return (
         <main className="flex flex-col items-center justify-center">
-            <h1 className="gap-3 my-20 flex flex-col items-center text-center">
+            <h1 className="
+                    mb-12
+                    w-full max-w-[1500px] mx-auto
+                    flex flex-col items-center text-center gap-3
+                    rounded-xl border border-border bg-muted/70 py-10
+                ">
                 {tournamentInfo && (
                     <>
                         {/* 제목 */}
                         <span className="text-3xl font-bold">
                             {tournamentInfo.title}
                         </span>
-    
+
                         {/* 설명 */}
                         {tournamentInfo.description && (
                             <span className="max-w-xl text-sm text-gray-600 dark:text-gray-300">
@@ -175,14 +180,14 @@ export default function WorldcupGamePage() {
                         )}
                     </>
                 )}
-    
+
                 {/* 라운드 정보 배지 */}
                 <span
                     className="
-                        mt-10 inline-flex items-center
+                        mt-4 inline-flex items-center
                         rounded-full
-                        bg-neutral-200 px-6 py-2 text-sm font-semibold text-neutral-800
-                        dark:bg-neutral-800 dark:text-neutral-100
+                        bg-neutral-200 px-6 py-2 text-sm font-semibold text-gray-800
+                        dark:bg-neutral-600 dark:text-gray-200
                     "
                 >
                     {currentRound}강
