@@ -12,10 +12,16 @@ import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { apiPost } from "@/lib/apiClient";
 
+// 이미지 테이블에서 이미지 + 이름 + url 정보 가져오기
 type ImageCandidate = {
     id: string;
     name: string;
     image_url: string;
+};
+// 토너먼트 테이블에서 해당 [id] 게시물의 제목 + 설명 가져오기
+type TournamentInfo = {
+    title: string;
+    description: string | null;
 };
 
 function shuffle<T>(arr: T[]): T[] {
@@ -33,6 +39,7 @@ export default function WorldcupGamePage() {
     const [nextRoundCandidates, setNextRoundCandidates] = useState<ImageCandidate[]>([]);
     const [winner, setWinner] = useState<ImageCandidate | null>(null);
     const [loading, setLoading] = useState(true);
+    const [tournamentInfo, setTournamentInfo] = useState<TournamentInfo | null>(null);
 
     // 초기 데이터 로드
     useEffect(() => {
@@ -50,7 +57,7 @@ export default function WorldcupGamePage() {
 
             const { data: tournament, error: tError } = await supabase
                 .from("tournaments")
-                .select("id")
+                .select("id, title, description")
                 .eq("short_id", numericId)
                 .maybeSingle();
 
@@ -62,6 +69,10 @@ export default function WorldcupGamePage() {
             }
 
             const tournamentUuid = tournament.id as string;
+            setTournamentInfo({
+                title: tournament.title,
+                description: tournament.description,
+            });
 
             // 2) uuid 기준으로 images 조회
             const { data, error } = await supabase
@@ -148,15 +159,46 @@ export default function WorldcupGamePage() {
     // 진행중 UI
     return (
         <main className="flex flex-col items-center justify-center">
-            <h1 className="text-xl font-bold mb-4">
-                {currentRound}강 {currentIndex + 1} / {currentRound / 2}
+            <h1 className="gap-3 my-20 flex flex-col items-center text-center">
+                {tournamentInfo && (
+                    <>
+                        {/* 제목 */}
+                        <span className="text-3xl font-bold">
+                            {tournamentInfo.title}
+                        </span>
+    
+                        {/* 설명 */}
+                        {tournamentInfo.description && (
+                            <span className="max-w-xl text-sm text-gray-600 dark:text-gray-300">
+                                {tournamentInfo.description}
+                            </span>
+                        )}
+                    </>
+                )}
+    
+                {/* 라운드 정보 배지 */}
+                <span
+                    className="
+                        mt-10 inline-flex items-center
+                        rounded-full
+                        bg-neutral-200 px-6 py-2 text-sm font-semibold text-neutral-800
+                        dark:bg-neutral-800 dark:text-neutral-100
+                    "
+                >
+                    {currentRound}강
+                    <span className="ml-4 text-lime-600 dark:text-lime-300">
+                        {currentIndex + 1} / {currentRound / 2}
+                    </span>
+                </span>
             </h1>
+
+            {/* 이미지 영역 */}
             {currentPair && (
                 <div className="flex gap-6">
                     {[currentPair.left, currentPair.right].map((item) => (
                         <button
                             key={item.id}
-                            className="flex flex-col items-center border rounded-md p-2 hover:bg-gray-50"
+                            className="flex flex-col items-center border-2 rounded-md p-4 hover:border-lime-500"
                             onClick={() => handlePick(item)}
                         >
                             <img
@@ -166,7 +208,7 @@ export default function WorldcupGamePage() {
                                 h-50 w-50
                                 sm:h-70 sm:w-70
                                 md:h-100 md:w-100
-                                lg:h-160 lg:w-160
+                                lg:h-170 lg:w-170
                                 object-cover rounded-md
                                 "
                             />
