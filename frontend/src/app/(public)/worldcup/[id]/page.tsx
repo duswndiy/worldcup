@@ -28,6 +28,16 @@ function shuffle<T>(arr: T[]): T[] {
     return [...arr].sort(() => Math.random() - 0.5);
 }
 
+// 프리로드
+function preloadImages(candidates: ImageCandidate[]) {
+    if (typeof window === "undefined") return;
+
+    candidates.forEach((c) => {
+        const img = new Image();
+        img.src = c.image_url; // 브라우저가 백그라운드에서 캐시에 받아둠
+    });
+}
+
 export default function WorldcupGamePage() {
     const params = useParams<{ id: string }>();
     const router = useRouter();
@@ -97,12 +107,17 @@ export default function WorldcupGamePage() {
             }
 
             const initial = shuffle(list).slice(0, 32);
+
+            // 첫 화면 렌더링
             setCurrentRoundCandidates(initial);
             setCurrentRound(32);
             setCurrentIndex(0);
             setNextRoundCandidates([]);
             setWinner(null);
             setLoading(false);
+
+            // 첫 화면 보여준 뒤, 추가로 백그라운드 프리로드
+            preloadImages(initial);
         };
 
         fetchImages();
