@@ -6,8 +6,9 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { apiGet, apiPost } from "@/lib/apiClient";
+import { Button, Input, Label, Textarea } from "@/components/ui";
 
 type Result = {
     winner_image_id: string;
@@ -25,6 +26,7 @@ type Comment = {
 export default function ResultPage() {
     const params = useParams<{ id: string }>();
     const tournamentId = params.id;
+    const router = useRouter();
 
     const [result, setResult] = useState<Result | null>(null);
     const [comments, setComments] = useState<Comment[]>([]);
@@ -85,16 +87,31 @@ export default function ResultPage() {
                             src={result.winner_image_url}
                             alt={result.winner_name}
                             className="
-                                h-90 w-90           // 스마트폰
-                                sm:h-100 sm:w-100   // 폴드 스마트폰
-                                md:h-100 md:w-100   // 태블릿
-                                lg:h-160 lg:w-160   // 데스크탑
-                                object-cover rounded-md"
+                h-90 w-90
+                sm:h-100 sm:w-100
+                md:h-100 md:w-100
+                lg:h-160 lg:w-160
+                object-cover rounded-md"
                         />
-                        <div>
+                        <div className="flex flex-col gap-3 items-center md:items-start">
                             <p className="text-xl font-semibold text-center md:text-left">
                                 {result.winner_name}
                             </p>
+
+                            <div className="flex flex-wrap gap-2 justify-center md:justify-start">
+                                <Button
+                                    onClick={() => router.push(`/worldcup/${tournamentId}`)}
+                                >
+                                    다시하기
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    onClick={() => router.push(`/`)}
+                                >
+                                    다른 월드컵 하기
+                                </Button>
+                            </div>
+
                             {/* TODO: 카카오톡 공유 버튼 자리 */}
                         </div>
                     </div>
@@ -105,28 +122,35 @@ export default function ResultPage() {
                     <h2 className="text-xl font-semibold">댓글</h2>
 
                     <form onSubmit={handleSubmit} className="space-y-2">
-                        <div className="flex gap-2">
-                            <input
-                                className="flex-1 border px-3 py-2 rounded-md"
-                                placeholder="닉네임 (선택)"
+                        <div className="flex flex-col gap-1">
+                            <Label htmlFor="nickname">닉네임 (선택)</Label>
+                            <Input
+                                id="nickname"
+                                className="flex-1"
+                                placeholder="닉네임을 입력해주세요."
                                 value={nickname}
                                 onChange={(e) => setNickname(e.target.value)}
                             />
                         </div>
-                        <textarea
-                            className="w-full border px-3 py-2 rounded-md"
-                            placeholder="댓글을 입력해주세요."
-                            rows={3}
-                            value={content}
-                            onChange={(e) => setContent(e.target.value)}
-                        />
-                        <button
+
+                        <div className="flex flex-col gap-1">
+                            <Label htmlFor="comment">댓글</Label>
+                            <Textarea
+                                id="comment"
+                                placeholder="댓글을 입력해주세요."
+                                rows={3}
+                                value={content}
+                                onChange={(e) => setContent(e.target.value)}
+                            />
+                        </div>
+
+                        <Button
                             type="submit"
                             disabled={pending || !content.trim()}
-                            className="px-4 py-2 bg-black text-white rounded-md disabled:opacity-50"
+                            className="w-full md:w-auto"
                         >
                             {pending ? "작성 중..." : "댓글 작성"}
-                        </button>
+                        </Button>
                     </form>
 
                     {/* 댓글 리스트 */}
