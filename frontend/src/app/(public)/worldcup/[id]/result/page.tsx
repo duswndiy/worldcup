@@ -76,37 +76,40 @@ export default function ResultPage() {
     if (!result) return <div className="p-4">결과를 불러오는 중...</div>;
 
     return (
-        <main className="max-w-[1400px] mx-auto py-10">
+        <main className="max-w-[1500px] mx-auto mt-14">
             {/* 모바일: 세로, md 이상: 좌우 2컬럼 */}
             <div className="flex flex-col md:flex-row md:gap-8">
                 {/* 왼쪽: 우승 이미지 크게 */}
-                <section className="md:w-1/2 space-y-4 mb-8 md:mb-0">
-                    <h1 className="text-2xl font-bold">최종 우승자 🎉</h1>
-                    <div className="flex flex-col items-center md:items-start gap-4">
+                <section className="md:w-1/2 mb-20 md:mb-0">
+                    <h1 className="text-3xl font-bold text-center mb-6">최종 우승</h1>
+                    <div className="flex flex-col items-center md:items-start">
                         <img
                             src={result.winner_image_url}
                             alt={result.winner_name}
                             className="
-                h-90 w-90
-                sm:h-100 sm:w-100
-                md:h-100 md:w-100
-                lg:h-160 lg:w-160
-                object-cover rounded-md"
+                                h-90 w-90           // 스마트폰
+                                sm:h-130 sm:w-130   // 폴드 스마트폰
+                                md:h-150 md:w-150   // 태블릿
+                                lg:h-180 lg:w-180   // 데스크탑
+                                mb-6 object-cover rounded-md
+                            "
                         />
                         <div className="flex flex-col gap-3 items-center md:items-start">
-                            <p className="text-xl font-semibold text-center md:text-left">
+                            <p className="text-xl font-bold text-center md:text-left">
                                 {result.winner_name}
                             </p>
 
                             <div className="flex flex-wrap gap-2 justify-center md:justify-start">
                                 <Button
                                     onClick={() => router.push(`/worldcup/${tournamentId}`)}
+                                    className="cursor-pointer"
                                 >
                                     다시하기
                                 </Button>
                                 <Button
                                     variant="outline"
                                     onClick={() => router.push(`/`)}
+                                    className="cursor-pointer"
                                 >
                                     다른 월드컵 하기
                                 </Button>
@@ -118,12 +121,12 @@ export default function ResultPage() {
                 </section>
 
                 {/* 오른쪽: 댓글 폼 + 리스트 */}
-                <section className="md:w-1/2 space-y-3">
-                    <h2 className="text-xl font-semibold">댓글</h2>
+                <section className="md:w-1/2 p-4">
+                    <h2 className="text-xl font-bold mt-14 mb-6">댓글</h2>
 
-                    <form onSubmit={handleSubmit} className="space-y-2">
-                        <div className="flex flex-col gap-1">
-                            <Label htmlFor="nickname">닉네임 (선택)</Label>
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                        <div className="flex flex-col gap-3">
+                            <Label htmlFor="nickname">닉네임</Label>
                             <Input
                                 id="nickname"
                                 className="flex-1"
@@ -133,7 +136,7 @@ export default function ResultPage() {
                             />
                         </div>
 
-                        <div className="flex flex-col gap-1">
+                        <div className="flex flex-col gap-3">
                             <Label htmlFor="comment">댓글</Label>
                             <Textarea
                                 id="comment"
@@ -154,23 +157,23 @@ export default function ResultPage() {
                     </form>
 
                     {/* 댓글 리스트 */}
-                    <ul className="space-y-2 mt-4">
+                    <ul className="space-y-3 mt-16">
                         {comments.map((c) => (
-                            <li key={c.id} className="border rounded-md p-3 flex gap-3">
+                            <li key={c.id} className="border rounded-md flex py-3 px-4 gap-5">
                                 {/* 왼쪽: 우승 이미지 */}
                                 <img
                                     src={result.winner_image_url}
                                     alt={result.winner_name}
-                                    className="w-16 h-16 rounded-full object-cover flex-shrink-0"
+                                    className="w-12 h-12 rounded-full object-cover flex-shrink-0"
                                 />
 
                                 {/* 오른쪽: 상단(닉네임/우승자/시간) + 하단(댓글 내용) */}
-                                <div className="flex-1 flex flex-col justify-center">
+                                <div className="flex-1 flex flex-col justify-center gap-1">
                                     {/* 오른쪽 상단 */}
-                                    <div className="flex flex-wrap items-center gap-2 text-sm font-semibold">
+                                    <div className="flex flex-wrap items-center gap-4 text-sm font-base">
                                         <span>{c.nickname || "익명"}</span>
                                         <span className="text-xs text-gray-400">
-                                            · {result.winner_name}
+                                            {result.winner_name}
                                         </span>
                                         <span className="text-xs text-gray-400">
                                             {new Date(c.created_at).toLocaleString()}
@@ -178,7 +181,7 @@ export default function ResultPage() {
                                     </div>
 
                                     {/* 오른쪽 하단 */}
-                                    <p className="mt-1 text-sm whitespace-pre-line">
+                                    <p className="text-sm whitespace-pre-line">
                                         {c.content}
                                     </p>
                                 </div>
