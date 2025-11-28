@@ -82,7 +82,7 @@ export default function ResultPage() {
                 {/* 왼쪽: 우승 이미지 크게 */}
                 <section className="md:w-1/2 mb-20 md:mb-0">
                     <h1 className="text-3xl font-bold text-center mb-6">최종 우승</h1>
-                    <div className="flex flex-col items-center md:items-start">
+                    <div className="flex flex-col items-center">
                         <img
                             src={result.winner_image_url}
                             alt={result.winner_name}
@@ -94,8 +94,8 @@ export default function ResultPage() {
                                 mb-6 object-cover rounded-md
                             "
                         />
-                        <div className="flex flex-col gap-3 items-center md:items-start">
-                            <p className="text-xl font-bold text-center md:text-left">
+                        <div className="flex flex-col gap-3 items-center">
+                            <p className="text-xl font-bold text-center">
                                 {result.winner_name}
                             </p>
 
