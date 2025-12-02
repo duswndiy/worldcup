@@ -22,21 +22,31 @@
 
 <br/><br/>
 
-### 💻 기술 스택 (Stack)
+## 🖼️ 주요 기능 시연
 
-### 프론트엔드
-![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat&logo=typescript&logoColor=white)
-![Next.js](https://img.shields.io/badge/Next.js-000000?style=flat&logo=next.js&logoColor=white)
-![React](https://img.shields.io/badge/React-61DAFB?style=flat&logo=react&logoColor=black)
-![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=flat&logo=tailwindcss&logoColor=white)
-![shadcn/ui](https://img.shields.io/badge/shadcn%2Fui-000000?style=flat&logo=vercel&logoColor=white)
+|  | 서비스 화면 |
+| :--- | :--- |
+| **토너먼트 생성** | ![월드컵 생성 과정](assets/create.gif) |
+| **게임** | ![사용자 월드컵 참여 시연](assets/worldcup.gif) |
+| **결과** | ![결과 확인 시연](assets/result.gif) |
 
-### 백엔드 및 API
-![Node.js](https://img.shields.io/badge/Node.js-339933?style=flat&logo=node.js&logoColor=white)
-![Express](https://img.shields.io/badge/Express-000000?style=flat&logo=express&logoColor=white)
-![RESTful API](https://img.shields.io/badge/RESTful_API-0052CC?style=flat&logo=apache&logoColor=white)
+<br/><br/>
 
-### 데이터베이스
-![Supabase](https://img.shields.io/badge/Supabase_Storage-3ECF8E?style=flat&logo=supabase&logoColor=white)
+# ✨ 핵심 기술 스택
+
+### 💻 프론트엔드
+
+| 분류 | 기술 스택 |
+| :--- | :--- |
+| **언어** | <img src="https://img.shields.io/badge/TypeScript-3178C6?style=flat&logo=typescript&logoColor=white"/> <img src="https://img.shields.io/badge/HTML5-E34F26?style=flat&logo=html5&logoColor=white"/> |
+| **프레임워크** | <img src="https://img.shields.io/badge/React-61DAFB?style=flat&logo=react&logoColor=black"/> <img src="https://img.shields.io/badge/Next.js-000000?style=flat&logo=next.js&logoColor=white"/> |
+| **스타일링/UI** | <img src="https://img.shields.io/badge/Tailwind CSS-06B6D4?style=flat&logo=tailwindcss&logoColor=white"/> <img src="https://img.shields.io/badge/shadcn%2Fui-000000?style=flat&logo=vercel&logoColor=white"/> |
+
+### ⚙️ 백엔드 및 DB
+
+| 분류 | 기술 스택 |
+| :--- | :--- |
+| **런타임 / 프레임워크** | <img src="https://img.shields.io/badge/Node.js-339933?style=flat&logo=node.js&logoColor=white"/> <img src="https://img.shields.io/badge/Express-000000?style=flat&logo=express&logoColor=white"/> |
+| **API / DB** | <img src="https://img.shields.io/badge/RESTful API-0052CC?style=flat&logo=apache&logoColor=white"/> <img src="https://img.shields.io/badge/Supabase-3ECF8E?style=flat&logo=supabase&logoColor=white"/> |
 
 <br/><br/>
