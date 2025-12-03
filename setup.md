@@ -19,7 +19,7 @@
 ├ Language: TypeScript
 ├ Styling: TailwindCSS + Shadcn UI
 ├ State Management: Zustand
-├ API Communication: RESTful API (fetch/axios)
+├ API Communication: RESTful API (fetch / axios)
 ├ Image Upload: 
     ㄴ> 파일 자체는 "Supabase Storage"에 직접 업로드.
     ㄴ> 업로드 후, 이미지 경로만 백엔드(Express)로 전달 -> DB에 메타데이터 저장.
@@ -37,20 +37,10 @@
 └ Deployment: Render or Railway
 
 
-
 - Shared: `/shared` 폴더에 프론트·백 공용 타입 정의
 
 
-
-- CI/CD: GitHub Actions
-┌ main 브랜치 push 시 자동 테스트 & Lint
-└ Docker 빌드 및 배포 자동화 (Render or Railway /Vercel 연결)
-
-
-
-- Containerization: Docker Compose
-┌ frontend / backend / db(Postgres) 세 컨테이너 실행
-└ 환경 변수는 `.env` 파일로 관리
+- CI/CD: GitHub Actions (main 브랜치 push 시 자동 테스트 & Lint)
 
 
 ----------------------------------------------------------------------------------------
@@ -61,8 +51,8 @@
 - 프론트엔드 설정
 ┌ `npx create-next-app@latest frontend --ts --eslint --app --src-dir false --import-alias "@/*"`
 ├ `cd frontend`
-├ `npm i zustand @supabase/supabase-js`
-└ axios 설치 (fetch 사용 시 생략략)
+├ `npm i zustand @supabase/supabase-js` (아직은 훅으로만 관리해도 괜찮은 정도이다.)
+└ axios 설치 (fetch 사용 시 생략)
 
 
 - 백엔드 설정
@@ -76,11 +66,6 @@
 - shared 폴더
 ┌ root/shared 폴더 생성
 └ `types.ts`, `zodSchemas.ts` 등 공용 타입 정의
-
-
-- Docker 환경 세팅
-┌ `Dockerfile`, `docker-compose.yml` 작성  
-└ 로컬에서 `docker-compose up`으로 frontend/backend/db 통합 실행 확인
 
 
 - Supabase 연결
