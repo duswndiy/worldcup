@@ -223,7 +223,7 @@ router.get("/worldcup/:id/comments", async (req, res) => {
 
     const { data, error: cError } = await supabaseAdmin
         .from("comments")
-        .select("id, nickname, content, created_at")
+        .select("id, nickname, content, created_at, winner_name, winner_image_url")
         .eq("tournament_id", tournamentId) // uuid 기준 조회
         .order("created_at", { ascending: false });
 
@@ -234,6 +234,50 @@ router.get("/worldcup/:id/comments", async (req, res) => {
 
     return res.json(data ?? []);
 });
+
+
+type WinnerSnapshot = {
+    winner_name: string | null;
+    winner_image_url: string | null;
+};
+
+async function getLatestWinnerSnapshot(
+    tournamentId: string
+): Promise<WinnerSnapshot> {
+    const { data: latestResult, error: rError } = await supabaseAdmin
+        .from("results")
+        .select("winner_image_id, winner_name, created_at")
+        .eq("tournament_id", tournamentId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+    if (rError || !latestResult) {
+        if (rError) console.error(rError);
+        return { winner_name: null, winner_image_url: null };
+    }
+
+    const { data: image, error: iError } = await supabaseAdmin
+        .from("images")
+        .select("image_url")
+        .eq("id", latestResult.winner_image_id)
+        .maybeSingle();
+
+    if (iError || !image) {
+        if (iError) console.error(iError);
+        return {
+            winner_name: latestResult.winner_name ?? null,
+            winner_image_url: null,
+        };
+    }
+
+    return {
+        winner_name: latestResult.winner_name ?? null,
+        winner_image_url: image.image_url ?? null,
+    };
+}
+
+
 
 /*
  * 댓글 작성 (익명)
@@ -277,14 +321,21 @@ router.post("/worldcup/:id/comments", async (req, res) => {
         });
     }
 
+    // 🔹 현재 토너먼트의 최신 우승자 스냅샷 조회
+    const { winner_name, winner_image_url } = await getLatestWinnerSnapshot(
+        tournamentId
+    );
+
     const { data, error: iError } = await supabaseAdmin
         .from("comments")
         .insert({
-            tournament_id: tournamentId, // uuid 로 저장
+            tournament_id: tournamentId,
             nickname: safeNickname,
             content: trimmedContent,
+            winner_name,
+            winner_image_url,
         })
-        .select()
+        .select("id, nickname, content, created_at, winner_name, winner_image_url")
         .single();
 
     if (iError || !data) {
