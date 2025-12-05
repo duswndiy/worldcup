@@ -5,12 +5,16 @@ import { DarkToggle } from "./dark-toggle";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 import { Button } from "@/components/ui";
-import { useRouter } from "next/navigation"; 
+import { useRouter } from "next/navigation";
+import Image from "next/image";
+import { useTheme } from "next-themes";
 
 export default function Header() {
     const [isLoggedIn, setIsLoggedIn] = useState(false);    // 1. "로그인 했나?"를 기억하는 상자, 초기값은 "아니(false)"
     const router = useRouter();                             // 2. "로그아웃" 할 때, 페이지 이동을 위한 router 준비
-                                                            //    Link 안 쓴 이유: "뒤로가기" 흔적이 남지 않게 하기 위해서
+                                                            //     Link 안 쓴 이유: "뒤로가기" 흔적이 남지 않게 하기 위해서
+    const { resolvedTheme } = useTheme();
+
     const handleLogout = async () => {                      // 7. "로그아웃" 버튼 누르면 실행될 함수
         await supabase.auth.signOut();                      // 8. supabase에 로그아웃 알려서 세션 끊기
         setIsLoggedIn(false);                               // 9. 화면 상태 "로그인 안 함(false)"로 변경
@@ -30,7 +34,7 @@ export default function Header() {
         // 로그인/로그아웃 시 상태 바꿔주는 부분
         const {
             data: { subscription },
-        } = supabase.auth.onAuthStateChange((_event, session) => {  // 7. 앞으로 로그인/로로그아웃 바뀔 때마다 알려달라고 supabase 구독
+        } = supabase.auth.onAuthStateChange((_event, session) => {  // 7. 앞으로 로그인/로그아웃 바뀔 때마다 알려달라고 supabase 구독
             if (!mounted) return;                                   // 8. 헤더 사라졌다면, 아무것도 하지 않고 끝낸다
             setIsLoggedIn(!!session);                               // 9. 로그인 했으면 true, 로그아웃 했으면 false
         });
@@ -41,11 +45,21 @@ export default function Header() {
         };
     }, []);                                                 // 3. []: 헤더 마운트 될 때, 딱 한 번만 실행
 
+    // 라이트모드면 lightlogo, 다크모드면 darklogo
+    const logoSrc = resolvedTheme === "dark" ? "/darklogo.png" : "/lightlogo.png";
+
+
     return (
         <header>
-            <div className="mx-auto flex max-w-[1500px] items-center justify-between px-8 py-6">
-                <Link href="/">
-                    <h1 className="text-lg font-semibold">Worldcup</h1>
+            <div className="mx-auto flex max-w-[1500px] items-center justify-between p-10">
+                <Link href="/" className="inline-flex items-center">
+                    <Image
+                        src={logoSrc}
+                        alt="이상형 월드컵 서비스 픽클 로고 이미지"
+                        width={220}
+                        height={70}
+                        className="h-10 w-auto"
+                    />
                 </Link>
                 <div className="flex items-center gap-6">
                     {isLoggedIn && (
