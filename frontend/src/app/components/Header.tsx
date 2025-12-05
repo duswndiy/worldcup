@@ -68,6 +68,7 @@ export default function Header() {
                         alt="이상형 월드컵 서비스 픽클 로고 이미지"
                         width={220}
                         height={70}
+                        unoptimized
                         className="h-10 w-auto"
                     />
                 </Link>

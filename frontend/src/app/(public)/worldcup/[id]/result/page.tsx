@@ -91,6 +91,7 @@ export default function ResultPage() {
                             alt={result.winner_name}
                             width={360}
                             height={360}
+                            unoptimized
                             className="
                             h-90 w-90           // 스마트폰
                             sm:h-130 sm:w-130   // 폴드 스마트폰
@@ -175,6 +176,7 @@ export default function ResultPage() {
                                         alt={winnerName}
                                         width={48}
                                         height={48}
+                                        unoptimized
                                         className="w-12 h-12 rounded-full object-cover flex-shrink-0"
                                     />
 

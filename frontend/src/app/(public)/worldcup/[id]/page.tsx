@@ -227,6 +227,7 @@ export default function WorldcupGamePage() {
                                 alt={item.name}
                                 width={300}
                                 height={300}
+                                unoptimized
                                 className="
                                 h-50 w-50
                                 sm:h-70 sm:w-70

@@ -79,7 +79,7 @@ export default async function Page() {
                 {tournaments.map((t) => (
                     <li
                         key={t.short_id}
-                        className="rounded-xl border border-border/60 bg-card/60 px-4 py-3 transition hover:border-primary/60 hover:bg-accent/60 "
+                        className="rounded-xl border border-border bg-card/60 px-4 py-3 transition hover:border-primary/60 hover:bg-accent/60 "
                     >
                         <Link href={`/worldcup/${t.short_id}`}>
                             <div className="flex flex-col gap-3">
@@ -99,6 +99,7 @@ export default async function Page() {
                                                 alt="월드컵 썸네일"
                                                 width={240}
                                                 height={220}
+                                                unoptimized
                                                 className="h-full w-full object-cover"
                                             />
                                         </div>
