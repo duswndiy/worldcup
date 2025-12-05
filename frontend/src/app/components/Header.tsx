@@ -24,7 +24,8 @@ export default function Header() {
 
     useEffect(() => {
         let alive = true;                                   // 3. 헤더 살아있다는 표시 (이 effect 내부 전용)
-
+        
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setMounted(true);                                   // 3-1. 이제부터는 클라이언트에서 테마 정보(resolvedTheme)를 믿어도 됨
 
         // 첫 렌더링 시 세션 확인
