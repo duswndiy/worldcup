@@ -97,9 +97,11 @@ function CreateWorldcupPage() {
             });
 
             router.push("/");
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error(err);
-            setError(err.message ?? "월드컵 생성 중 오류가 발생했습니다.");
+            const message =
+                err instanceof Error ? err.message : "월드컵 생성 중 오류가 발생했습니다.";
+            setError(message);
         } finally {
             setPending(false);
         }
