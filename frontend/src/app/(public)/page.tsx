@@ -4,6 +4,7 @@
 // - 추후 "인기순/최신순" 토글 확장 예정
 
 import Link from "next/link";
+import Image from "next/image";
 import { supabase } from "@/lib/supabaseClient";
 
 type TournamentWithThumbnails = {
@@ -93,9 +94,11 @@ export default async function Page() {
                                             lg:h-75 lg:w-90     // 데스크탑
                                             overflow-hidden rounded-md border border-border/60 bg-muted"
                                         >
-                                            <img
+                                            <Image
                                                 src={src}
                                                 alt="월드컵 썸네일"
+                                                width={240}
+                                                height={220}
                                                 className="h-full w-full object-cover"
                                             />
                                         </div>
