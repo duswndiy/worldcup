@@ -57,13 +57,21 @@ export default async function Page() {
     const tournaments = await getTournaments();
 
     return (
-        <section className="space-y-6">
-            <header className="space-y-1">
-                <h1 className="text-2xl font-semibold tracking-tight">이상형 월드컵</h1>
-                <p className="text-sm text-muted-foreground">
-                    다양한 월드컵을 플레이하고, 당신의 원픽을 골라보세요.
-                </p>
-            </header>
+        <section className="space-y-10">
+            {/* 상단: 사이트 소개 + 게임 시작 영역 */}
+            <div className="rounded-2xl border border-border bg-muted/40 px-4 py-8">
+                <div className="mx-auto max-w-2xl space-y-5 text-center">
+                    <p className="inline-flex items-center justify-center rounded-full border border-lime-500 bg-lime-100 px-4 py-2 text-[11px] font-bold tracking-[0.25em] text-lime-600 uppercase">
+                        PICCKLE
+                    </p>
+                    <h1 className="text-lg text-muted-foreground">
+                        치열한 <b>밸런스 게임</b>에 참여해 보세요.<br />
+                        아이돌, 음식, 애니메이션 등 원하는 주제를 골라<br />
+                        끝까지 살아남는 나만의 원픽을 뽑고,<br />
+                        남들과 다른 <b>취향 랭킹</b>을 친구에게 공유하세요!
+                    </h1>
+                </div>
+            </div>
 
             {/* 게시물 카드 부분 */}
             <ul className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -82,7 +90,7 @@ export default async function Page() {
                                             className="
                                             h-55 w-60           // 스마트폰
                                             sm:h-60 sm:w-75     // 태블릿
-                                            lg:h-80 lg:w-90     // 데스크탑
+                                            lg:h-75 lg:w-90     // 데스크탑
                                             overflow-hidden rounded-md border border-border/60 bg-muted"
                                         >
                                             <img
