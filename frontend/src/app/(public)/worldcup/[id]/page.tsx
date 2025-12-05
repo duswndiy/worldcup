@@ -11,6 +11,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { apiPost } from "@/lib/apiClient";
+import Image from "next/image";
 
 // 이미지 테이블에서 이미지 + 이름 + url 정보 가져오기
 type ImageCandidate = {
@@ -33,7 +34,7 @@ function preloadImages(candidates: ImageCandidate[]) {
     if (typeof window === "undefined") return;
 
     candidates.forEach((c) => {
-        const img = new Image();
+        const img = new window.Image();
         img.src = c.image_url; // 브라우저가 백그라운드에서 캐시에 받아둠
     });
 }
@@ -47,7 +48,7 @@ export default function WorldcupGamePage() {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [currentRoundCandidates, setCurrentRoundCandidates] = useState<ImageCandidate[]>([]);
     const [nextRoundCandidates, setNextRoundCandidates] = useState<ImageCandidate[]>([]);
-    const [winner, setWinner] = useState<ImageCandidate | null>(null);
+    const [, setWinner] = useState<ImageCandidate | null>(null);
     const [loading, setLoading] = useState(true);
     const [tournamentInfo, setTournamentInfo] = useState<TournamentInfo | null>(null);
 
@@ -221,16 +222,18 @@ export default function WorldcupGamePage() {
                             className="flex flex-col items-center border-2 rounded-md p-4 hover:border-lime-500"
                             onClick={() => handlePick(item)}
                         >
-                            <img
+                            <Image
                                 src={item.image_url}
                                 alt={item.name}
+                                width={300}
+                                height={300}
                                 className="
                                 h-50 w-50
                                 sm:h-70 sm:w-70
                                 md:h-100 md:w-100
                                 lg:h-170 lg:w-170
                                 object-cover rounded-md
-                                "
+                            "
                             />
                             <span className="mt-4 text-large">{item.name}</span>
                         </button>
