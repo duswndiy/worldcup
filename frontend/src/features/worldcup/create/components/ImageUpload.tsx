@@ -4,6 +4,7 @@
 "use client";
 
 import { ChangeEvent } from "react";
+import Image from "next/image";
 import { Button, Input, Label } from "@/components/ui";
 
 type Props = {
@@ -78,9 +79,11 @@ export function ImageUpload({
                                 key={idx}
                                 className="relative aspect-square overflow-hidden rounded-md border border-border bg-muted"
                             >
-                                <img
+                                <Image
                                     src={url}
                                     alt={`preview-${idx}`}
+                                    width={200}
+                                    height={200}
                                     className="h-full w-full object-cover"
                                 />
                                 <button
