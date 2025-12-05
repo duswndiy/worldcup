@@ -60,7 +60,7 @@ export default async function Page() {
     return (
         <section className="space-y-10">
             {/* 상단: 사이트 소개 + 게임 시작 영역 */}
-            <div className="rounded-2xl border border-border bg-muted/40 px-4 py-8">
+            <div className="rounded-2xl border border-border bg-muted/40 p-4">
                 <div className="mx-auto max-w-2xl space-y-5 text-center">
                     <p className="inline-flex items-center justify-center rounded-full border border-lime-500 bg-lime-100 px-4 py-2 text-[11px] font-bold tracking-[0.25em] text-lime-600 uppercase">
                         PICCKLE
