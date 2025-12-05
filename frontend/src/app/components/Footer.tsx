@@ -5,7 +5,7 @@ export default function Footer() {
                 <div className="flex flex-col items-center gap-2 text-sm text-muted-foreground">
                     <div className="flex items-center gap-5">
                         <span className="font-medium text-foreground">
-                            © 2025 Worldcup
+                            © 2025 PICCKLE
                         </span>
                         <span className="rounded-full border px-3 py-1 text-xs bg-background text-muted-foreground">
                             Beta
