@@ -60,7 +60,7 @@ export default function Header() {
 
     return (
         <header>
-            <div className="mx-auto flex max-w-[1500px] items-center justify-between p-10">
+            <div className="mx-auto flex max-w-[1500px] items-center justify-between px-6 pt-10 pb-6">
                 <Link href="/" className="inline-flex items-center">
                     <Image
                         src={logoSrc}
