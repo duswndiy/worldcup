@@ -23,7 +23,8 @@ async function getTournaments(): Promise<TournamentWithThumbnails[]> {
         .order("created_at", { ascending: false });
 
     if (error || !tournaments) {
-        console.error(error);
+        // console.error(error);
+        console.warn("tournaments 조회 실패", error);
         return [];
     }
 
@@ -39,7 +40,8 @@ async function getTournaments(): Promise<TournamentWithThumbnails[]> {
             .limit(2);
 
         if (imgError) {
-            console.error(imgError);
+            // console.error(imgError);
+            console.warn("이미지 조회 실패", imgError);
         }
 
         result.push({
@@ -78,8 +80,8 @@ export default async function Page() {
                                         <div
                                             key={idx}
                                             className="
-                                            h-50 w-50           // 스마트폰
-                                            sm:h-70 sm:w-70     // 태블릿
+                                            h-55 w-60           // 스마트폰
+                                            sm:h-60 sm:w-75     // 태블릿
                                             lg:h-80 lg:w-90     // 데스크탑
                                             overflow-hidden rounded-md border border-border/60 bg-muted"
                                         >
