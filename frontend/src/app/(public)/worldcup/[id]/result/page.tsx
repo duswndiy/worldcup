@@ -9,6 +9,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { apiGet, apiPost } from "@/lib/apiClient";
 import { Button, Input, Label, Textarea } from "@/components/ui";
+import Image from "next/image";
 
 type Result = {
     winner_image_id: string;
@@ -85,16 +86,18 @@ export default function ResultPage() {
                 <section className="md:w-1/2 mb-20 md:mb-0">
                     <h1 className="text-3xl font-bold text-center mb-6">최종 우승</h1>
                     <div className="flex flex-col items-center">
-                        <img
+                        <Image
                             src={result.winner_image_url}
                             alt={result.winner_name}
+                            width={360}
+                            height={360}
                             className="
-                                h-90 w-90           // 스마트폰
-                                sm:h-130 sm:w-130   // 폴드 스마트폰
-                                md:h-150 md:w-150   // 태블릿
-                                lg:h-180 lg:w-180   // 데스크탑
-                                mb-6 object-cover rounded-md
-                            "
+                            h-90 w-90           // 스마트폰
+                            sm:h-130 sm:w-130   // 폴드 스마트폰
+                            md:h-150 md:w-150   // 태블릿
+                            lg:h-180 lg:w-180   // 데스크탑
+                            mb-6 object-cover rounded-md
+                        "
                         />
                         <div className="flex flex-col gap-3 items-center">
                             <p className="text-xl font-bold text-center">
@@ -167,9 +170,11 @@ export default function ResultPage() {
                             return (
                                 <li key={c.id} className="border rounded-md flex py-3 px-4 gap-5">
                                     {/* 왼쪽: 우승 이미지 (댓글 시점 스냅샷 기준) */}
-                                    <img
+                                    <Image
                                         src={winnerImageUrl}
                                         alt={winnerName}
+                                        width={48}
+                                        height={48}
                                         className="w-12 h-12 rounded-full object-cover flex-shrink-0"
                                     />
 
