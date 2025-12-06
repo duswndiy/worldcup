@@ -7,6 +7,9 @@ import Link from "next/link";
 import Image from "next/image";
 import { supabase } from "@/lib/supabaseClient";
 
+// 60초 마다 db 읽어오기
+export const revalidate = 60;
+
 type TournamentWithThumbnails = {
     id: string;
     short_id: number;
