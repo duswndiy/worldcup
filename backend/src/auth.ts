@@ -52,7 +52,7 @@ export async function adminLogin(req: Request, res: Response) {
     res.cookie(ADMIN_COOKIE_NAME, sessionId, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
         maxAge: ADMIN_COOKIE_MAX_AGE_MS,
     });
 
