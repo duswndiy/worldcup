@@ -61,7 +61,7 @@ export default async function Page() {
     const tournaments = await getTournaments();
 
     return (
-        <section className="space-y-10">
+        <section className="space-y-5">
             {/* 상단: 사이트 소개 + 게임 시작 영역 */}
             <div className="rounded-2xl border border-border bg-muted/40 p-4">
                 <div className="mx-auto max-w-2xl space-y-3 text-center">
@@ -70,9 +70,9 @@ export default async function Page() {
                     </p>
                     <h1 className="text-lg text-muted-foreground">
                         치열한 <b>밸런스 게임</b>에 참여해 보세요.<br />
-                        아이돌, 음식, 애니메이션 등 원하는 주제를 골라<br />
+                        아이돌, 음식, 캐릭터 등 랜덤 주제를 골라<br />
                         끝까지 살아남는 나만의 원픽을 뽑고,<br />
-                        남들과 다른 <b>취향 랭킹</b>을 친구에게 공유하세요!
+                        <b>취향 랭킹</b>을 친구에게 공유하세요!
                     </h1>
                 </div>
             </div>
@@ -82,7 +82,7 @@ export default async function Page() {
                 {tournaments.map((t) => (
                     <li
                         key={t.short_id}
-                        className="rounded-xl border border-border bg-card/60 px-4 py-3 transition hover:border-primary/60 hover:bg-accent/60 "
+                        className="rounded-xl border border-border bg-card/60 p-2.5 transition hover:border-primary/60 hover:bg-accent/60 "
                     >
                         <Link href={`/worldcup/${t.short_id}`}>
                             <div className="flex flex-col gap-3">
