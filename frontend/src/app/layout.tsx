@@ -53,10 +53,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
     return (
         <html lang="ko" suppressHydrationWarning>
-            <body className="min-h-screen bg-background text-foreground antialiased">
+            <body className="min-h-screen flex flex-col bg-background text-foreground antialiased">
                 <ThemeProvider>
                     <Header />
-                    <main className="mx-auto max-w-[1500px] min-h-[1200px] p-3">{children}</main>
+                    <main className="mx-auto max-w-[1500px] flex-1 p-3">{children}</main>
                     <Footer />
                 </ThemeProvider>
             </body>
