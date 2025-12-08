@@ -79,12 +79,21 @@ export default function ResultPage() {
     if (!result) return <div className="p-4">결과를 불러오는 중...</div>;
 
     return (
-        <main className="max-w-[1500px] mx-auto mt-14">
+        <main className="max-w-[1500px] mx-auto">
+            {/* FINAL WINNER 뱃지: 화면 폭 전체 기준 중앙 정렬 */}
+            <div className="flex justify-center mb-2 md:mb-8">
+                <span className="inline-flex items-center gap-2 px-6 py-3 rounded-full
+                    border border-lime-500 bg-lime-500/10 dark:bg-lime-400/10
+                    text-base font-bold tracking-[0.25em] uppercase text-lime-900 dark:text-lime-300
+                    my-10">FINAL WINNER
+                </span>
+            </div>
+
             {/* 모바일: 세로, md 이상: 좌우 2컬럼 */}
             <div className="flex flex-col md:flex-row md:gap-8">
                 {/* 왼쪽: 우승 이미지 크게 */}
-                <section className="md:w-1/2 mb-20 md:mb-0">
-                    <h1 className="text-3xl font-bold text-center mb-6">최종 우승</h1>
+                <section className="md:w-1/2 mb-14 md:mb-0">
+
                     <div className="flex flex-col items-center">
                         <Image
                             src={result.winner_image_url}
@@ -97,15 +106,15 @@ export default function ResultPage() {
                             sm:h-130 sm:w-130   // 폴드 스마트폰
                             md:h-150 md:w-150   // 태블릿
                             lg:h-180 lg:w-180   // 데스크탑
-                            mb-6 object-cover rounded-md
+                            mb-5 object-cover rounded-md
                         "
                         />
-                        <div className="flex flex-col gap-3 items-center">
+                        <div className="flex flex-col gap-10 items-center">
                             <p className="text-xl font-bold text-center">
                                 {result.winner_name}
                             </p>
 
-                            <div className="flex flex-wrap gap-3 justify-center md:justify-start mt-2">
+                            <div className="flex flex-wrap gap-3 justify-center md:justify-start">
                                 <Button
                                     onClick={() => router.push(`/worldcup/${tournamentId}`)}
                                     className="cursor-pointer"
@@ -127,8 +136,8 @@ export default function ResultPage() {
                 </section>
 
                 {/* 오른쪽: 댓글 폼 + 리스트 */}
-                <section className="md:w-1/2 p-4">
-                    <h2 className="text-xl font-bold mt-14 mb-6">댓글</h2>
+                <section className="md:w-1/2 p-8">
+                    <h2 className="text-xl font-bold mb-8">댓글</h2>
 
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div className="flex flex-col gap-3">
@@ -163,7 +172,7 @@ export default function ResultPage() {
                     </form>
 
                     {/* 댓글 리스트 */}
-                    <ul className="space-y-3 mt-16">
+                    <ul className="space-y-3 mt-10">
                         {comments.map((c) => {
                             const winnerName = c.winner_name ?? result.winner_name;
                             const winnerImageUrl = c.winner_image_url ?? result.winner_image_url;
