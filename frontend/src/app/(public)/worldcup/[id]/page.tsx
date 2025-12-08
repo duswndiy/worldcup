@@ -176,10 +176,10 @@ export default function WorldcupGamePage() {
     return (
         <main className="flex flex-col items-center justify-center">
             <h1 className="
-                    mb-12
+                    mb-2.5
                     w-full max-w-[1500px] mx-auto
                     flex flex-col items-center text-center gap-3
-                    rounded-xl border border-border bg-muted/70 py-10
+                    rounded-xl border border-border bg-muted/70 py-6
                 ">
                 {tournamentInfo && (
                     <>
@@ -215,11 +215,11 @@ export default function WorldcupGamePage() {
 
             {/* 이미지 영역 */}
             {currentPair && (
-                <div className="flex gap-5">
+                <div className="flex gap-2.5">
                     {[currentPair.left, currentPair.right].map((item) => (
                         <button
                             key={item.id}
-                            className="flex flex-col items-center border-2 rounded-md p-4 hover:border-lime-500"
+                            className="flex flex-col items-center border-2 rounded-md p-2 hover:border-lime-500"
                             onClick={() => handlePick(item)}
                         >
                             <Image
@@ -232,7 +232,7 @@ export default function WorldcupGamePage() {
                                 h-50 w-50
                                 sm:h-70 sm:w-70
                                 md:h-100 md:w-100
-                                lg:h-170 lg:w-170
+                                lg:h-180 lg:w-180
                                 object-cover rounded-md
                             "
                             />
