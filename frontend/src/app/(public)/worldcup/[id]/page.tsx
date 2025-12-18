@@ -48,7 +48,6 @@ export default function WorldcupGamePage() {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [currentRoundCandidates, setCurrentRoundCandidates] = useState<ImageCandidate[]>([]);
     const [nextRoundCandidates, setNextRoundCandidates] = useState<ImageCandidate[]>([]);
-    const [, setWinner] = useState<ImageCandidate | null>(null);
     const [loading, setLoading] = useState(true);
     const [tournamentInfo, setTournamentInfo] = useState<TournamentInfo | null>(null);
 
@@ -104,7 +103,6 @@ export default function WorldcupGamePage() {
             setCurrentRound(32);
             setCurrentIndex(0);
             setNextRoundCandidates([]);
-            setWinner(null);
             setLoading(false);
 
             // 첫 화면 보여준 뒤, 추가로 백그라운드 프리로드
