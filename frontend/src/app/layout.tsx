@@ -56,7 +56,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <body className="min-h-screen flex flex-col bg-background text-foreground antialiased">
                 <ThemeProvider>
                     <Header />
-                    <main className="mx-auto max-w-[1500px] flex-1 p-3">{children}</main>
+                    <main className="w-full mx-auto max-w-[1500px] flex-1 p-3">{children}</main>
                     <Footer />
                 </ThemeProvider>
             </body>

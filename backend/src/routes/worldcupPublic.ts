@@ -4,13 +4,16 @@
 // 3. 서버 확장 시, new Map()으로 구현한 Rate limit 소용 없음.🔥
 //    ㄴ> Redis 사용해서 "중앙 집중 분산 관리" 해야 함.🔥
 
-import { Router } from "express";
+import { Router, Request, Response, NextFunction } from "express";
 import { supabaseAdmin } from "../supabaseClient";
 
 const router = Router();
 
+// ---------------------------------------------------------------------------
+// Rate limit / length limit 설정
+// ---------------------------------------------------------------------------
 
-// Rate limit 속도 제한 설정
+// 속도 제한
 const RATE_WINDOW_MINUTE = 60 * 1000;           // 1분
 const RATE_WINDOW_HOUR = 60 * 60 * 1000;        // 60분
 const RATE_WINDOW_DAY = 24 * 60 * 60 * 1000;    // 24시간
@@ -29,16 +32,9 @@ const COMMENT_LIMIT_PER_DAY = 300;              // 하루종일 댓글 300개개
 const COMMENT_NICKNAME_MAX_LENGTH = 10;
 const COMMENT_CONTENT_MAX_LENGTH = 150;
 
+
 // 인메모리 rate limit 저장소
 type RateEntry = { count: number; windowStart: number };
-
-const resultMinuteMap = new Map<string, RateEntry>();
-const resultHourMap = new Map<string, RateEntry>();
-const resultDayMap = new Map<string, RateEntry>();
-
-const commentMinuteMap = new Map<string, RateEntry>();
-const commentHourMap = new Map<string, RateEntry>();
-const commentDayMap = new Map<string, RateEntry>();
 
 function isRateLimited(
     store: Map<string, RateEntry>,
@@ -60,25 +56,53 @@ function isRateLimited(
     return false;
 }
 
-// 동일 IP 기준, 전체 게임 대상 결과 저장 rate limit
-function isResultRateLimited(ip: string | undefined): boolean {
-    const key = ip ?? "unknown";
-    if (isRateLimited(resultMinuteMap, key, RESULT_LIMIT_PER_MINUTE, RATE_WINDOW_MINUTE))
-        return true;
-    if (isRateLimited(resultHourMap, key, RESULT_LIMIT_PER_HOUR, RATE_WINDOW_HOUR)) return true;
-    if (isRateLimited(resultDayMap, key, RESULT_LIMIT_PER_DAY, RATE_WINDOW_DAY)) return true;
-    return false;
+/*
+ * IP 기반 RateLimiter 생성기
+ * - 분/시/일 단위 한 번에 관리
+ */
+function createIpRateLimiter(config: {
+    perMinute: number;
+    perHour: number;
+    perDay: number;
+}) {
+    const minuteMap = new Map<string, RateEntry>();
+    const hourMap = new Map<string, RateEntry>();
+    const dayMap = new Map<string, RateEntry>();
+
+    return (ip: string | undefined): boolean => {
+        const key = ip ?? "unknown";
+
+        if (isRateLimited(minuteMap, key, config.perMinute, RATE_WINDOW_MINUTE)) {
+            return true;
+        }
+        if (isRateLimited(hourMap, key, config.perHour, RATE_WINDOW_HOUR)) {
+            return true;
+        }
+        if (isRateLimited(dayMap, key, config.perDay, RATE_WINDOW_DAY)) {
+            return true;
+        }
+
+        return false;
+    };
 }
 
-// 동일 IP 기준, 전체 게임 대상 댓글 작성 rate limit
-function isCommentRateLimited(ip: string | undefined): boolean {
-    const key = ip ?? "unknown";
-    if (isRateLimited(commentMinuteMap, key, COMMENT_LIMIT_PER_MINUTE, RATE_WINDOW_MINUTE))
-        return true;
-    if (isRateLimited(commentHourMap, key, COMMENT_LIMIT_PER_HOUR, RATE_WINDOW_HOUR)) return true;
-    if (isRateLimited(commentDayMap, key, COMMENT_LIMIT_PER_DAY, RATE_WINDOW_DAY)) return true;
-    return false;
-}
+// 결과 저장용 RateLimiter
+const isResultRateLimited = createIpRateLimiter({
+    perMinute: RESULT_LIMIT_PER_MINUTE,
+    perHour: RESULT_LIMIT_PER_HOUR,
+    perDay: RESULT_LIMIT_PER_DAY,
+});
+
+// 댓글 작성용 RateLimiter
+const isCommentRateLimited = createIpRateLimiter({
+    perMinute: COMMENT_LIMIT_PER_MINUTE,
+    perHour: COMMENT_LIMIT_PER_HOUR,
+    perDay: COMMENT_LIMIT_PER_DAY,
+});
+
+// ---------------------------------------------------------------------------
+// 토너먼트 조회 공통 처리
+// ---------------------------------------------------------------------------
 
 /*
  * URL 의 :id 는 tournaments.short_id (숫자) 이고,
@@ -104,8 +128,14 @@ async function getTournamentUuidByShortId(
         .eq("short_id", shortId)
         .maybeSingle();
 
-    if (error || !data) {
+    // DB 에러: 로그 찍고 not_found 처리
+    if (error) {
         console.error(error);
+        return { error: "not_found", tournamentId: null };
+    }
+
+    // 데이터 없음: 조용히 not_found 처리 (로그는 안 찍음)
+    if (!data) {
         return { error: "not_found", tournamentId: null };
     }
 
@@ -113,18 +143,37 @@ async function getTournamentUuidByShortId(
 }
 
 /*
- * 우승 결과 저장
- * POST /public/worldcup/:id/result
- * body: { winnerImageId: string, winnerName: string }
+ * 공통 미들웨어:
+ * - :id 를 tournaments.short_id 로 받아서
+ * - 실제 UUID 를 조회 후 (req as any).tournamentId 에 저장
+ * - 잘못된 ID / 없는 토너먼트 → 400/404 로 즉시 응답
  */
-router.post("/worldcup/:id/result", async (req, res) => {
-    const { error, tournamentId } = await getTournamentUuidByShortId(req.params.id);
+async function resolveTournament(
+    req: Request,
+    res: Response,
+    next: NextFunction
+) {
+    const { error, tournamentId } = await getTournamentUuidByShortId(
+        req.params.id
+    );
+
     if (error === "invalid") {
         return res.status(400).json({ error: "잘못된 월드컵 ID 입니다." });
     }
     if (error === "not_found" || !tournamentId) {
         return res.status(404).json({ error: "해당 월드컵을 찾을 수 없습니다." });
     }
+
+    (req as any).tournamentId = tournamentId;
+    return next();
+}
+
+// ---------------------------------------------------------------------------
+// 우승 결과 저장
+// POST /public/worldcup/:id/result
+// ---------------------------------------------------------------------------
+router.post("/worldcup/:id/result", resolveTournament, async (req, res) => {
+    const tournamentId = (req as any).tournamentId as string;
 
     const { winnerImageId, winnerName } = req.body as {
         winnerImageId?: string;
@@ -140,7 +189,8 @@ router.post("/worldcup/:id/result", async (req, res) => {
     // 동일 IP 기준, 전체 게임 대상 레이트리밋
     if (isResultRateLimited(req.ip)) {
         return res.status(429).json({
-            error: "결과 저장 요청이 너무 자주 발생하고 있습니다. 잠시 후 다시 시도해주세요.",
+            error:
+                "결과 저장 요청이 너무 자주 발생하고 있습니다. 잠시 후 다시 시도해주세요.",
         });
     }
 
@@ -162,18 +212,12 @@ router.post("/worldcup/:id/result", async (req, res) => {
     return res.json(result);
 });
 
-/*
- * 우승 결과 조회 + 우승 이미지 경로 포함
- * GET /public/worldcup/:id/result
- */
-router.get("/worldcup/:id/result", async (req, res) => {
-    const { error, tournamentId } = await getTournamentUuidByShortId(req.params.id);
-    if (error === "invalid") {
-        return res.status(400).json({ error: "잘못된 월드컵 ID 입니다." });
-    }
-    if (error === "not_found" || !tournamentId) {
-        return res.status(404).json({ error: "해당 월드컵을 찾을 수 없습니다." });
-    }
+// ---------------------------------------------------------------------------
+// 최신 우승 결과 조회 (+ 이미지 URL)
+// GET /public/worldcup/:id/result
+// ---------------------------------------------------------------------------
+router.get("/worldcup/:id/result", resolveTournament, async (req, res) => {
+    const tournamentId = (req as any).tournamentId as string;
 
     // 1) 가장 최신 result 한 개
     const { data: result, error: rError } = await supabaseAdmin
@@ -185,7 +229,7 @@ router.get("/worldcup/:id/result", async (req, res) => {
         .maybeSingle();
 
     if (rError || !result) {
-        console.error(rError);
+        if (rError) console.error(rError);
         return res.status(404).json({ error: "result not found" });
     }
 
@@ -208,18 +252,12 @@ router.get("/worldcup/:id/result", async (req, res) => {
     });
 });
 
-/*
- * 댓글 조회
- * GET /public/worldcup/:id/comments
- */
-router.get("/worldcup/:id/comments", async (req, res) => {
-    const { error, tournamentId } = await getTournamentUuidByShortId(req.params.id);
-    if (error === "invalid") {
-        return res.status(400).json({ error: "잘못된 월드컵 ID 입니다." });
-    }
-    if (error === "not_found" || !tournamentId) {
-        return res.status(404).json({ error: "해당 월드컵을 찾을 수 없습니다." });
-    }
+// ---------------------------------------------------------------------------
+// 댓글 조회
+// GET /public/worldcup/:id/comments
+// ---------------------------------------------------------------------------
+router.get("/worldcup/:id/comments", resolveTournament, async (req, res) => {
+    const tournamentId = (req as any).tournamentId as string;
 
     const { data, error: cError } = await supabaseAdmin
         .from("comments")
@@ -235,7 +273,9 @@ router.get("/worldcup/:id/comments", async (req, res) => {
     return res.json(data ?? []);
 });
 
-
+// ---------------------------------------------------------------------------
+// 최신 우승자 스냅샷 조회 (댓글용)
+// ---------------------------------------------------------------------------
 type WinnerSnapshot = {
     winner_name: string | null;
     winner_image_url: string | null;
@@ -277,21 +317,12 @@ async function getLatestWinnerSnapshot(
     };
 }
 
-
-
-/*
- * 댓글 작성 (익명)
- * POST /public/worldcup/:id/comments
- * body: { nickname?: string, content: string }
- */
-router.post("/worldcup/:id/comments", async (req, res) => {
-    const { error, tournamentId } = await getTournamentUuidByShortId(req.params.id);
-    if (error === "invalid") {
-        return res.status(400).json({ error: "잘못된 월드컵 ID 입니다." });
-    }
-    if (error === "not_found" || !tournamentId) {
-        return res.status(404).json({ error: "해당 월드컵을 찾을 수 없습니다." });
-    }
+// ---------------------------------------------------------------------------
+// 댓글 작성 (익명)
+// POST /public/worldcup/:id/comments
+// ---------------------------------------------------------------------------
+router.post("/worldcup/:id/comments", resolveTournament, async (req, res) => {
+    const tournamentId = (req as any).tournamentId as string;
 
     const { nickname, content } = req.body as {
         nickname?: string;
@@ -322,9 +353,8 @@ router.post("/worldcup/:id/comments", async (req, res) => {
     }
 
     // 🔹 현재 토너먼트의 최신 우승자 스냅샷 조회
-    const { winner_name, winner_image_url } = await getLatestWinnerSnapshot(
-        tournamentId
-    );
+    const { winner_name, winner_image_url } =
+        await getLatestWinnerSnapshot(tournamentId);
 
     const { data, error: iError } = await supabaseAdmin
         .from("comments")
