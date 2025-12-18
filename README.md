@@ -40,3 +40,32 @@
 | **API / DB** | <img src="https://img.shields.io/badge/RESTful API-0052CC?style=flat&logo=apache&logoColor=white"/> <img src="https://img.shields.io/badge/Supabase-3ECF8E?style=flat&logo=supabase&logoColor=white"/> |
 
 <br/><br/>
+<br/><br/>
+
+# 🛠️ API 명세서
+
+### 🔐 Admin API (관리자 세션 관리)
+관리자 API는 `admin_session` HttpOnly 쿠키를 통해 권한을 확인합니다.
+
+| 기능 | Method | Endpoint | 설명 | 상세 내용 및 주요 에러 코드 |
+| :--- | :---: | :--- | :--- | :--- |
+| **admin 로그인** | `POST` | `/admin/login` | Supabase 인증 | •  `accessToken` 검증 후 화이트리스트 이메일 확인, 세션 쿠키 발급<br/>• `400`(토큰 누락) `401`(invalid 토큰) `403`(권한 없음) |
+| **게임 생성** | `POST` | `/admin/worldcup` | 신규 게임 등록 |  • `title` 필수, `images` 32장 업로드 필수 <br/>• `400`(필수 데이터 부족) `500`(DB 생성 실패) |
+
+### 🌍 Public API (사용자 공개 기능)
+사용자 API에는 서비스 안정성을 위해 **Rate Limit**이 적용되어 있습니다.
+
+| 기능 | Method | Endpoint | 설명 | 상세 내용 및 주요 에러 코드 |
+| :--- | :---: | :--- | :--- | :--- |
+| **결과 저장** | `POST` | `/public/worldcup/:id/result` | 우승 결과 데이터 기록 | •  `winnerImageId`, `winnerName` 필수, Rate Limit 적용<br/>• `400`(ID 오류) `429`(요청 제한) `500`(저장 실패) |
+| **결과 조회** | `GET` | `/public/worldcup/:id/result` | 최근 우승 정보 조회 | •  `created_at` 기준 최신 1개 조회 및 이미지 URL 조인<br/>• `400`(ID 오류) `404`(결과 없음) `500`(조회 실패)  |
+| **댓글 조회** | `GET` | `/public/worldcup/:id/comments` | 전체 댓글 최신순 조회 | •  `created_at DESC` 정렬, 우승자 정보 포함<br/>• `400`(ID 오류) `404`(게임 없음) `500`(조회 실패)  |
+| **댓글 작성** | `POST` | `/public/worldcup/:id/comments` | 익명 댓글 작성 | • 최대 150자 입력 가능, Length Limit 적용<br/>• `400`(검증 실패) `429`(요청 제한) `500`(저장 실패)  |
+
+### 🚦 Rate Limit (요청 제한)
+| API 구분 | 1분 제한 | 1시간 제한 | 1일 제한 | 초과 시 응답 |
+| :--- | :---: | :---: | :---: | :--- |
+| **결과 저장** | 4회 | 60회 | 300회 | `429 Too Many Requests` |
+| **댓글 작성** | 4회 | 100회 | 300회 | `429 Too Many Requests` |
+
+<br/><br/>
