@@ -15,46 +15,38 @@ type TournamentWithThumbnails = {
     short_id: number;
     title: string;
     description: string | null;
-    created_at: string;
-    thumbnails: string[]; // 해당 월드컵 이미지 중 최대 2장
+    thumbnails: string[];
 };
 
 async function getTournaments(): Promise<TournamentWithThumbnails[]> {
     // 1) 토너먼트 목록 (uuid 포함) 조회
     const { data: tournaments, error } = await supabase
         .from("tournaments")
-        .select("id, short_id, title, description, created_at")
+        .select("id, short_id, title, description")
         .order("created_at", { ascending: false });
 
     if (error || !tournaments) {
-        // console.error(error);
         console.warn("tournaments 조회 실패", error);
         return [];
     }
 
-    // 2) 각 토너먼트별로 이미지 최대 2장씩 가져오기
-    const result: TournamentWithThumbnails[] = [];
+    const results = await Promise.all(
+        tournaments.map(async (t) => {
+            const { data: images } = await supabase
+                .from("images")
+                .select("image_url")
+                .eq("tournament_id", t.id)
+                .order("created_at", { ascending: true })
+                .limit(2);
 
-    for (const t of tournaments) {
-        const { data: images, error: imgError } = await supabase
-            .from("images")
-            .select("image_url")
-            .eq("tournament_id", t.id)
-            .order("created_at", { ascending: true })
-            .limit(2);
+            return {
+                ...t,
+                thumbnails: (images ?? []).map((img) => img.image_url),
+            } satisfies TournamentWithThumbnails;
+        }),
+    );
 
-        if (imgError) {
-            // console.error(imgError);
-            console.warn("이미지 조회 실패", imgError);
-        }
-
-        result.push({
-            ...t,
-            thumbnails: (images ?? []).map((img) => img.image_url),
-        });
-    }
-
-    return result;
+    return results;
 }
 
 export default async function Page() {

@@ -48,7 +48,6 @@ export default function WorldcupGamePage() {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [currentRoundCandidates, setCurrentRoundCandidates] = useState<ImageCandidate[]>([]);
     const [nextRoundCandidates, setNextRoundCandidates] = useState<ImageCandidate[]>([]);
-    const [, setWinner] = useState<ImageCandidate | null>(null);
     const [loading, setLoading] = useState(true);
     const [tournamentInfo, setTournamentInfo] = useState<TournamentInfo | null>(null);
 
@@ -60,7 +59,6 @@ export default function WorldcupGamePage() {
             // 1) short_id(숫자) → tournaments.id(uuid) 변환
             const numericId = Number(tournamentShortId);
             if (!Number.isInteger(numericId)) {
-                console.error("잘못된 월드컵 ID:", tournamentShortId);
                 alert("잘못된 월드컵 주소입니다.");
                 setLoading(false);
                 return;
@@ -73,7 +71,6 @@ export default function WorldcupGamePage() {
                 .maybeSingle();
 
             if (tError || !tournament) {
-                console.error(tError);
                 alert("해당 월드컵을 찾을 수 없습니다.");
                 setLoading(false);
                 return;
@@ -99,14 +96,6 @@ export default function WorldcupGamePage() {
             }
 
             const list = (data ?? []) as ImageCandidate[];
-
-            if (list.length < 32) {
-                // 32개 미만인 경우 UX는 자유롭게 처리
-                alert("이 월드컵은 아직 32개 이상의 이미지가 준비되지 않았습니다.");
-                setLoading(false);
-                return;
-            }
-
             const initial = shuffle(list).slice(0, 32);
 
             // 첫 화면 렌더링
@@ -114,7 +103,6 @@ export default function WorldcupGamePage() {
             setCurrentRound(32);
             setCurrentIndex(0);
             setNextRoundCandidates([]);
-            setWinner(null);
             setLoading(false);
 
             // 첫 화면 보여준 뒤, 추가로 백그라운드 프리로드
