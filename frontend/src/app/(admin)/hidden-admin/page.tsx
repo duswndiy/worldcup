@@ -46,14 +46,20 @@ function HiddenAdminPage() {
     };
 
     return (
-        <main className="flex flex-col items-center mt-70 bg-background text-foreground">
+        <main
+            className="
+                flex flex-col items-center
+                bg-background text-foreground
+                mt-25          /* 모바일 */
+                lg:mt-40       /* 데스크탑 */
+            "
+        >
 
             <form
                 onSubmit={handleSubmit}
                 className="
                     w-full
                     max-w-sm        /* 모바일 */
-                    md:max-w-lg
                     space-y-4 rounded-xl border border-border bg-card/80 p-9 shadow-sm"
             >
                 <div className="text-2xl font-bold text-center mb-9">운영자 로그인</div>
