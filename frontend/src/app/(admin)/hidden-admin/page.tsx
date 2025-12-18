@@ -38,19 +38,23 @@ function HiddenAdminPage() {
 
             // 3) 루트 페이지로 리다이렉트
             router.replace("/");
-        }   catch (err) {
+        } catch (err) {
             setError(err instanceof Error ? err.message : "오류가 발생했습니다.");
-        }   finally {
+        } finally {
             setPending(false);
         }
     };
 
     return (
-        <main className="flex flex-col min-h-screen items-center mt-70 bg-background text-foreground">
+        <main className="flex flex-col items-center mt-70 bg-background text-foreground">
 
             <form
                 onSubmit={handleSubmit}
-                className="w-full max-w-sm space-y-4 rounded-xl border border-border bg-card/80 p-9 shadow-sm"
+                className="
+                    w-full
+                    max-w-sm        /* 모바일 */
+                    md:max-w-lg
+                    space-y-4 rounded-xl border border-border bg-card/80 p-9 shadow-sm"
             >
                 <div className="text-2xl font-bold text-center mb-9">운영자 로그인</div>
 
@@ -83,7 +87,7 @@ function HiddenAdminPage() {
                     />
                 </div>
 
-                {error && ( <p className="text-center text-xs text-destructive">아이디 또는 비밀번호가 일치하지 않습니다.</p> )}
+                {error && (<p className="text-center text-xs text-destructive">아이디 또는 비밀번호가 일치하지 않습니다.</p>)}
 
                 <button
                     type="submit"
