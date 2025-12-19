@@ -100,6 +100,57 @@ const isCommentRateLimited = createIpRateLimiter({
 });
 
 // ---------------------------------------------------------------------------
+// 월드컵 목록 조회 (루트 페이지용)
+// - GET /public/worldcup
+// - 최신순으로 tournaments 조회
+// - 각 토너먼트마다 최대 2개의 썸네일 이미지 포함
+// ---------------------------------------------------------------------------
+type ListItem = {
+    short_id: number;
+    title: string;
+    description: string | null;
+    thumbnails: string[];
+};
+
+router.get("/worldcup", async (req: Request, res: Response) => {
+    // 1) 토너먼트 목록 조회 (uuid 포함)
+    const { data: tournaments, error } = await supabaseAdmin
+        .from("tournaments")
+        .select("id, short_id, title, description")
+        .order("created_at", { ascending: false });
+
+    if (error || !tournaments) {
+        console.error("tournaments 조회 실패", error);
+        return res.status(500).json({ error: "월드컵 목록 조회에 실패했습니다." });
+    }
+
+    // 2) 각 토너먼트별로 썸네일(최대 2장) 조회
+    const items: ListItem[] = await Promise.all(
+        tournaments.map(async (t): Promise<ListItem> => {
+            const { data: images, error: imgError } = await supabaseAdmin
+                .from("images")
+                .select("image_url")
+                .eq("tournament_id", t.id)
+                .order("created_at", { ascending: true })
+                .limit(2);
+
+            if (imgError) {
+                console.error("images 조회 실패", imgError);
+            }
+
+            return {
+                short_id: t.short_id,
+                title: t.title,
+                description: t.description,
+                thumbnails: (images ?? []).map((img) => img.image_url),
+            };
+        })
+    );
+
+    return res.json(items);
+});
+
+// ---------------------------------------------------------------------------
 // 토너먼트 조회 공통 처리
 // ---------------------------------------------------------------------------
 
