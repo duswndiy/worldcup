@@ -32,7 +32,6 @@ const COMMENT_LIMIT_PER_DAY = 300;              // 하루종일 댓글 300개개
 const COMMENT_NICKNAME_MAX_LENGTH = 10;
 const COMMENT_CONTENT_MAX_LENGTH = 150;
 
-
 // 인메모리 rate limit 저장소
 type RateEntry = { count: number; windowStart: number };
 
@@ -169,9 +168,78 @@ async function resolveTournament(
 }
 
 // ---------------------------------------------------------------------------
+// 게임 페이지용 초기 데이터 조회 (제목/설명 + 이미지 목록)
+// GET /public/worldcup/:id
+// ---------------------------------------------------------------------------
+
+type GamePayload = {
+    info: {
+        title: string;
+        description: string | null;
+    };
+    images: {
+        id: string;
+        name: string;
+        image_url: string;
+    }[];
+};
+
+async function getGamePayloadByTournamentId(
+    tournamentId: string
+): Promise<GamePayload | null> {
+    // 1) 토너먼트 정보 (제목 + 설명)
+    const { data: tournament, error: tError } = await supabaseAdmin
+        .from("tournaments")
+        .select("title, description")
+        .eq("id", tournamentId)
+        .maybeSingle();
+
+    if (tError) {
+        console.error(tError);
+        return null;
+    }
+
+    if (!tournament) {
+        return null;
+    }
+
+    // 2) 이미지 목록
+    const { data: images, error: iError } = await supabaseAdmin
+        .from("images")
+        .select("id, name, image_url")
+        .eq("tournament_id", tournamentId)
+        .order("created_at", { ascending: true });
+
+    if (iError) {
+        console.error(iError);
+        return null;
+    }
+
+    return {
+        info: {
+            title: tournament.title,
+            description: tournament.description,
+        },
+        images: images ?? [],
+    };
+}
+
+router.get("/worldcup/:id", resolveTournament, async (req, res) => {
+    const tournamentId = (req as any).tournamentId as string;
+
+    const payload = await getGamePayloadByTournamentId(tournamentId);
+    if (!payload) {
+        return res.status(404).json({ error: "해당 월드컵을 찾을 수 없습니다." });
+    }
+
+    return res.json(payload);
+});
+
+// ---------------------------------------------------------------------------
 // 우승 결과 저장
 // POST /public/worldcup/:id/result
 // ---------------------------------------------------------------------------
+
 router.post("/worldcup/:id/result", resolveTournament, async (req, res) => {
     const tournamentId = (req as any).tournamentId as string;
 
@@ -216,7 +284,8 @@ router.post("/worldcup/:id/result", resolveTournament, async (req, res) => {
 // 최신 우승 결과 조회 (+ 이미지 URL)
 // GET /public/worldcup/:id/result
 // ---------------------------------------------------------------------------
-router.get("/worldcup/:id/result", resolveTournament, async (req, res) => {
+
+router.get("/public/worldcup/:id/result", resolveTournament, async (req, res) => {
     const tournamentId = (req as any).tournamentId as string;
 
     // 1) 가장 최신 result 한 개
@@ -256,6 +325,7 @@ router.get("/worldcup/:id/result", resolveTournament, async (req, res) => {
 // 댓글 조회
 // GET /public/worldcup/:id/comments
 // ---------------------------------------------------------------------------
+
 router.get("/worldcup/:id/comments", resolveTournament, async (req, res) => {
     const tournamentId = (req as any).tournamentId as string;
 
@@ -276,6 +346,7 @@ router.get("/worldcup/:id/comments", resolveTournament, async (req, res) => {
 // ---------------------------------------------------------------------------
 // 최신 우승자 스냅샷 조회 (댓글용)
 // ---------------------------------------------------------------------------
+
 type WinnerSnapshot = {
     winner_name: string | null;
     winner_image_url: string | null;
@@ -321,6 +392,7 @@ async function getLatestWinnerSnapshot(
 // 댓글 작성 (익명)
 // POST /public/worldcup/:id/comments
 // ---------------------------------------------------------------------------
+
 router.post("/worldcup/:id/comments", resolveTournament, async (req, res) => {
     const tournamentId = (req as any).tournamentId as string;
 
@@ -352,7 +424,7 @@ router.post("/worldcup/:id/comments", resolveTournament, async (req, res) => {
         });
     }
 
-    // 🔹 현재 토너먼트의 최신 우승자 스냅샷 조회
+    // 현재 토너먼트의 최신 우승자 스냅샷 조회
     const { winner_name, winner_image_url } =
         await getLatestWinnerSnapshot(tournamentId);
 
