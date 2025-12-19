@@ -3,7 +3,7 @@
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { Input, Label, Textarea, Button } from "@/components/ui";
-import { createComment, type ActionState } from "../actions";
+import { createComment, type ActionState } from "@/app/(public)/worldcup/[id]/result/actions";
 
 type Props = {
     id: string;

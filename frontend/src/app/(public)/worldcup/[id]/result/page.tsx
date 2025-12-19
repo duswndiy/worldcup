@@ -1,4 +1,4 @@
-import ResultView from "./_components/ResultView";
+import ResultView from "@/features/worldcup/result/ResultView";
 import { callExpress } from "@/lib/expressClient";
 
 export const revalidate = 60;

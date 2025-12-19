@@ -1,6 +1,6 @@
-import Game from "./_components/Game";
+import Game from "@/features/game/Game";
 import { callExpress } from "@/lib/expressClient";
-import type { GameData } from "./types";
+import type { GameData } from "@/features/game/types";
 
 export const revalidate = 60;
 
