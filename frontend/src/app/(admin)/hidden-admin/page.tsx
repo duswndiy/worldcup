@@ -1,14 +1,34 @@
-// ▶️ 관리자 로그인 페이지:
-// - Supabase Auth에서 생성한 계정으로 로그인
-// - access_token을 백엔드 /admin/login에 전달
-// - 성공 시 쿠키 세션 생성, 루트 페이지로 리다이렉트
+// frontend/src/app/(admin)/hidden-admin/page.tsx
+// ▶️ 관리자 로그인 페이지 (BFF 경유):
+// - 클라이언트에서 Supabase Auth(이메일/비밀번호)로 로그인
+// - 발급된 access_token을 Next API(/api/admin/login)에 전달
+// - API가 Express /admin/login을 호출해 HttpOnly 세션 쿠키를 발급받고, 그대로 브라우저에 전달
+// - 성공 시 루트 페이지로 리다이렉트
 
 "use client";
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
-import { apiPost } from "@/lib/apiClient";
+
+async function loginAdmin(accessToken: string): Promise<void> {
+    const res = await fetch("/api/admin/login", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ accessToken }),
+    });
+
+    if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        const message =
+            data && typeof data.error === "string"
+                ? data.error
+                : "로그인에 실패했습니다.";
+        throw new Error(message);
+    }
+}
 
 function HiddenAdminPage() {
     const router = useRouter();
@@ -26,20 +46,26 @@ function HiddenAdminPage() {
         try {
             // 1) Supabase Auth 로그인
             const { data, error: supaError } =
-                await supabase.auth.signInWithPassword({ email, password, });
+                await supabase.auth.signInWithPassword({
+                    email,
+                    password,
+                });
 
             if (supaError || !data.session) {
                 throw supaError ?? new Error("로그인에 실패했습니다.");
             }
 
             const accessToken = data.session.access_token;
-            // 2) 백엔드에 토큰 전달 → 관리자 검증 + HttpOnly 쿠키 발급
-            await apiPost<{ ok: true }>("/admin/login", { accessToken });
+
+            // 2) Next BFF API → Express /admin/login 호출 (세션 쿠키 발급)
+            await loginAdmin(accessToken);
 
             // 3) 루트 페이지로 리다이렉트
             router.replace("/");
         } catch (err) {
-            setError(err instanceof Error ? err.message : "오류가 발생했습니다.");
+            setError(
+                err instanceof Error ? err.message : "오류가 발생했습니다.",
+            );
         } finally {
             setPending(false);
         }
@@ -54,57 +80,76 @@ function HiddenAdminPage() {
                 lg:mt-40       /* 데스크탑 */
             "
         >
-
             <form
                 onSubmit={handleSubmit}
-                className="
-                    w-full
-                    max-w-sm        /* 모바일 */
-                    space-y-4 rounded-xl border border-border bg-card/80 p-9 shadow-sm"
+                className="w-full max-w-sm space-y-4 rounded-xl border border-border bg-card/80 p-9 shadow-sm"
             >
-                <div className="text-2xl font-bold text-center mb-9">운영자 로그인</div>
+                <div className="text-2xl font-bold text-center mb-9">
+                    운영자 로그인
+                </div>
 
                 {/* 로그인폼 내부 UI */}
                 <div>
-                    <label className="mb-1 block text-sm text-foreground">이메일</label>
+                    <label className="mb-1 block text-sm text-foreground">
+                        이메일
+                    </label>
                     <input
                         type="email"
                         required
-                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground shadow-sm
-                        transition-colors
-                        focus-visible:outline-none
-                        focus-visible:bg-[#39ff14]/10"
+                        className="
+                            w-full rounded-md border border-input bg-background px-3 py-2
+                            text-sm text-foreground shadow-sm
+                            transition-colors
+                            focus-visible:outline-none
+                            focus-visible:bg-[#39ff14]/10
+                        "
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                     />
                 </div>
 
                 <div>
-                    <label className="mb-1 block text-sm text-foreground">비밀번호</label>
+                    <label className="mb-1 block text-sm text-foreground">
+                        비밀번호
+                    </label>
                     <input
                         type="password"
                         required
-                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground shadow-sm
-                        transition-colors
-                        focus-visible:outline-none
-                        focus-visible:bg-[#39ff14]/10"
+                        className="
+                            w-full rounded-md border border-input bg-background px-3 py-2
+                            text-sm text-foreground shadow-sm
+                            transition-colors
+                            focus-visible:outline-none
+                            focus-visible:bg-[#39ff14]/10
+                            "
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                     />
                 </div>
 
-                {error && (<p className="text-center text-xs text-destructive">아이디 또는 비밀번호가 일치하지 않습니다.</p>)}
+                {error && (
+                    <p className="text-center text-xs text-destructive">
+                        아이디 또는 비밀번호가 일치하지 않습니다.
+                    </p>
+                )}
 
                 <button
                     type="submit"
                     disabled={pending}
-                    className="w-full rounded-md bg-primary mt-4 px-4 py-2 text-sm font-medium text-primary-foreground shadow hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="
+                        w-full rounded-md bg-primary mt-4 px-4 py-2
+                        text-sm font-medium text-primary-foreground shadow
+                        hover:bg-primary/90
+                        disabled:cursor-not-allowed disabled:opacity-50
+                    "
                 >
                     {pending ? "로그인 중..." : "로그인"}
                 </button>
             </form>
 
-            <p className="mt-8 text-xs text-muted-foreground">* 관리자용 페이지입니다</p>
+            <p className="mt-8 text-xs text-muted-foreground">
+                * 관리자용 페이지입니다
+            </p>
         </main>
     );
 }
