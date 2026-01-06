@@ -11,7 +11,7 @@ import { useState, FormEvent, ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 
 import { isGif, convertImagesToWebP } from "@/lib/image";
-import { WorldcupCreateForm } from "@/features/worldcup/create/components/CreateForm";
+import { WorldcupCreateForm } from "@/features/worldcup/create/CreateForm";
 import { uploadImagesToSupabase } from "@/features/worldcup/api/uploadImagesToSupabase";
 import { createTournament } from "@/features/worldcup/api/createWorldcup";
 

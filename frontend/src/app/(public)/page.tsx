@@ -1,56 +1,41 @@
 // 루트 페이지:
-// - 월드컵 게시물 목록을 최신순으로 Supabase에서 읽기 (anon key 사용)
-// - 클릭 시 /worldcup/[id]의 상세 페이지 이동 (게임 시작)
+// - Express BFF(GET /public/worldcup)를 통해 월드컵 목록 조회
+// - 각 카드 클릭 시 /worldcup/[short_id] 게임 페이지로 이동
 // - 추후 "인기순/최신순" 토글 확장 예정
 
 import Link from "next/link";
 import Image from "next/image";
-import { supabase } from "@/lib/supabaseClient";
+import { callExpress } from "@/lib/expressClient";
 
-// 60초 마다 db 읽어오기
+// 60초마다 목록 ISR
 export const revalidate = 60;
 
-type TournamentWithThumbnails = {
-    id: string;
+type TournamentItem = {
     short_id: number;
     title: string;
     description: string | null;
     thumbnails: string[];
 };
 
-async function getTournaments(): Promise<TournamentWithThumbnails[]> {
-    // 1) 토너먼트 목록 (uuid 포함) 조회
-    const { data: tournaments, error } = await supabase
-        .from("tournaments")
-        .select("id, short_id, title, description")
-        .order("created_at", { ascending: false });
+async function loadTournaments(): Promise<TournamentItem[]> {
+    try {
+        const list = await callExpress<TournamentItem[]>({
+            path: "/public/worldcup",
+            method: "GET",
+            next: {
+                tags: ["worldcup-list"],
+            },
+        });
 
-    if (error || !tournaments) {
-        console.warn("tournaments 조회 실패", error);
+        return Array.isArray(list) ? list : [];
+    } catch (error) {
+        console.error("[loadTournaments] failed", error);
         return [];
     }
-
-    const results = await Promise.all(
-        tournaments.map(async (t) => {
-            const { data: images } = await supabase
-                .from("images")
-                .select("image_url")
-                .eq("tournament_id", t.id)
-                .order("created_at", { ascending: true })
-                .limit(2);
-
-            return {
-                ...t,
-                thumbnails: (images ?? []).map((img) => img.image_url),
-            } satisfies TournamentWithThumbnails;
-        }),
-    );
-
-    return results;
 }
 
 export default async function Page() {
-    const tournaments = await getTournaments();
+    const tournaments = await loadTournaments();
 
     return (
         <section className="space-y-5">
@@ -69,7 +54,7 @@ export default async function Page() {
                 </div>
             </div>
 
-            {/* 게시물 카드 부분 */}
+            {/* 게시물 카드 목록 */}
             <ul className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 {tournaments.map((t) => (
                     <li
@@ -84,10 +69,11 @@ export default async function Page() {
                                         <div
                                             key={idx}
                                             className="
-                                            h-55 w-60           // 스마트폰
-                                            sm:h-60 sm:w-75     // 태블릿
-                                            lg:h-75 lg:w-90     // 데스크탑
-                                            overflow-hidden rounded-md border border-border/60 bg-muted"
+                                                h-55 w-60           // 스마트폰
+                                                sm:h-60 sm:w-75     // 태블릿
+                                                lg:h-75 lg:w-90     // 데스크탑
+                                                overflow-hidden rounded-md border border-border/60 bg-muted
+                                            "
                                         >
                                             <Image
                                                 src={src}
@@ -103,7 +89,9 @@ export default async function Page() {
 
                                 {/* 아래쪽: 텍스트 영역 */}
                                 <div>
-                                    <h2 className="text-lg font-bold text-foreground p-1">{t.title}</h2>
+                                    <h2 className="text-lg font-bold text-foreground p-1">
+                                        {t.title}
+                                    </h2>
                                     {t.description && (
                                         <p className="text-sm text-muted-foreground pl-1 pb-1">
                                             {t.description}

@@ -18,7 +18,7 @@
 ┌ Framework: Next.js (App Router)
 ├ Language: TypeScript
 ├ Styling: TailwindCSS + Shadcn UI
-├ State Management: Zustand
+├ State Management: Zustand (아직 사용 안 함)
 ├ API Communication: RESTful API (fetch / axios)
 ├ Image Upload: 
     ㄴ> 파일 자체는 "Supabase Storage"에 직접 업로드.
@@ -34,7 +34,7 @@
 ├ Supabase SDK:
     ㄴ> 서버에서는 "service_role_key" 사용해서 DB 쓰기 처리 (서버 전용).
     ㄴ> 클라이언트에서는 "anon_key" 사용해서 읽기 전용 접근.
-└ Deployment: Render or Railway
+└ Deployment: Render
 
 
 - Shared: `/shared` 폴더에 프론트·백 공용 타입 정의
@@ -74,12 +74,6 @@
 - GitHub Actions 구성
 ┌ `.github/workflows/deploy.yml` 추가  
 └ main push → 자동 빌드 및 배포 트리거
-
-
-- 배포 연결
-┌ 프론트: Vercel 연결  
-├ 백엔드: Render/Railway Docker로 배포  
-└ Supabase는 클라우드 DB로 자동 연결
 
 
 ----------------------------------------------------------------------------------------
@@ -206,7 +200,7 @@
 ┌ 익명 사용자도 호출 가능 (로그인 불필요)
 └ Express에서 검증 (토너먼트 존재 여부, winner_image_id 유효성 등) + rate limit 후 Supabase에 저장
 
-- 댓글 저장 API (POST /api/comments): Express에서 욕설/스팸 필터 + 길이 제한 + rate limit 후 Supabase에 저장
+- 댓글 저장 API (POST /api/comments): Express에서 길이 제한 + rate limit 후 Supabase에 저장
 
 - DB 쓰기 규칙
 ┌ 클라이언트(브라우저)는 Supabase REST/API로 직접 write 하지 않는다.
@@ -272,34 +266,67 @@
 
 ## 프론트엔드 트리구조
 
-frontend/features/worldcup
+frontend/src/features
+  game/
+    Game.tsx                 // 월드컵 게임 진행 UI + 로직 (클라이언트 컴포넌트)
+    types.ts                 // 게임에서 쓰는 타입 정의
+  worldcup/
     api/
-
-    components/
-
+      createWorldcup.ts      // 월드컵 생성 시 Express API 호출
+      uploadImagesToSupabase.ts // 이미지 업로드 + 메타데이터 Express로 전달
+    create/
+      CreateForm.tsx         // 월드컵 생성 폼 UI
+      ImageUpload.tsx        // 이미지 업로드 UI
+    result/
+      ResultView.tsx         // 결과 페이지 메인 뷰 (우승자 + 댓글 리스트)
+      CommentsForm.tsx       // 결과 페이지 댓글 작성 폼 (클라이언트 컴포넌트)
 
 frontend/src/app
-    (admin)/
-        hidden-admin/
-            page.tsx        // 로그인 폼 구현
-        worldcup/create/
-            page.tsx        // 이상형월드컵 게시물 만들기
+  (admin)/
+    hidden-admin/
+      page.tsx               // 관리자 로그인 페이지
+    worldcup/
+      create/
+        page.tsx             // 월드컵 생성 페이지 (entry, features/worldcup/create 사용)
+  (public)/
+    worldcup/
+      [id]/
+        actions.ts           // 게임 페이지 Server Action (우승 결과 저장)
+        page.tsx             // 게임 페이지 (Server Component, features/game 사용)
+        result/
+          actions.ts         // 결과 페이지 Server Action (댓글 작성)
+          page.tsx           // 결과 페이지 (Server Component, features/worldcup/result 사용)
+    page.tsx                 // 루트 페이지 (월드컵 목록, BFF로 Express 호출)
 
-    (public)/
-        worldcup/[id]/      // 게시물 id
-            page.tsx        // 클릭 시 보이는 게임 페이지
-            result/
-                page.tsx    // 결과 페이지: 최종 우승 페이지 + 댓글
-        page.tsx            // 루트페이지
+  api/
+    admin/
+      login/
+        route.ts             // 관리자 로그인 BFF API (Next → Express /admin/login)
 
-    components/             // 컴포넌트
-        dark-toggle.tsx
-        Footer.tsx
-        Header.tsx
-        theme-provider.tsx
+  components/
+    dark-toggle.tsx          // 다크모드 토글
+    Footer.tsx               // 공용 풋터
+    Header.tsx               // 공용 헤더 (로그인 상태 등 표시)
+    theme-provider.tsx       // 테마/다크모드 Provider
 
-    globals.css             // 전역css
-    layout.tsx              // 공통 레이아웃 (헤더푸터)
+  globals.css                // 전역 CSS
+  icon.png                   // 파비콘/아이콘
+  layout.tsx                 // 루트 레이아웃 (헤더/푸터 공통 래핑)
+
+frontend/src/components
+  ui/
+    button.tsx
+    input.tsx
+    label.tsx
+    textarea.tsx
+    skeleton.tsx
+    index.ts                 // 위 UI 컴포넌트 re-export
+
+frontend/src/lib
+  expressClient.ts           // Server Component/Action에서 Express BFF 호출용 헬퍼
+  image.ts                   // 이미지 관련 유틸
+  supabaseClient.ts          // Supabase Auth 클라이언트 (브라우저 전용)
+  utils.ts                   // 공용 유틸 함수 모음
 
 
 ----------------------------------------------------------------------------------------
