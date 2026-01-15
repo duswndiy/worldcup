@@ -336,7 +336,7 @@ router.post("/worldcup/:id/result", resolveTournament, async (req, res) => {
 // GET /public/worldcup/:id/result
 // ---------------------------------------------------------------------------
 
-router.get("/public/worldcup/:id/result", resolveTournament, async (req, res) => {
+router.get("/worldcup/:id/result", resolveTournament, async (req, res) => {
     const tournamentId = (req as any).tournamentId as string;
 
     // 1) 가장 최신 result 한 개
