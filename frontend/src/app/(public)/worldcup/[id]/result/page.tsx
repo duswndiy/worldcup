@@ -40,11 +40,11 @@ async function loadResultAndComments(id: string) {
 }
 
 type PageProps = {
-    params: { id: string };
+    params: Promise<{ id: string }>;
 };
 
 export default async function ResultPage({ params }: PageProps) {
-    const id = params.id;
+    const { id } = await params;
 
     let resultData: { result: Result; comments: Comment[] } | null = null;
 

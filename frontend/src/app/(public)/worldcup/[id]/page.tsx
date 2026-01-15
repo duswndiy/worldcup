@@ -15,11 +15,11 @@ async function loadGameData(id: string): Promise<GameData> {
 }
 
 type PageProps = {
-    params: { id: string };
+    params: Promise<{ id: string }>;
 };
 
 export default async function WorldcupGamePage({ params }: PageProps) {
-    const id = params.id;
+    const { id } = await params;
 
     let data: GameData | null = null;
 
