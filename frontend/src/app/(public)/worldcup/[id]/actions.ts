@@ -12,10 +12,8 @@ export async function saveResult(
         await callExpress({
             path: `/public/worldcup/${id}/result`,
             method: "POST",
-            body: {
-                winnerImageId: imageId,
-                winnerName: name,
-            },
+            body: { winnerImageId: imageId, winnerName: name },
+            forward: "ip",
         });
 
         // 결과 페이지 캐시 무효화

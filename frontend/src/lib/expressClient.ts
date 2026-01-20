@@ -1,12 +1,12 @@
 import { headers, cookies } from "next/headers";
 
-const EXPRESS_BASE_URL =
-    process.env.EXPRESS_BASE_URL ?? "http://localhost:4000";
+const EXPRESS_BASE_URL = process.env.EXPRESS_BASE_URL ?? "http://localhost:4000";
 
 type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
+type ForwardMode = "none" | "ip" | "cookies" | "cookies+ip";
 
 type FetchOptions<TBody> = {
-    path: string;              // 예: /public/worldcup/123/result
+    path: string;               // 예: /public/worldcup/123/result
     method?: HttpMethod;
     body?: TBody;
     cache?: RequestCache;
@@ -14,20 +14,20 @@ type FetchOptions<TBody> = {
         revalidate?: number;
         tags?: string[];
     };
+    // ✅ 추가 : 정적/ISR 페이지에서 기본은 "none"
+    forward?: ForwardMode;
 };
 
 async function buildCookieHeader(): Promise<string | undefined> {
-    const store = await cookies(); // ★ Promise를 await
+    const store = await cookies();
     const all = store.getAll();
     if (all.length === 0) return undefined;
 
-    return all
-        .map((cookie) => `${cookie.name}=${cookie.value}`)
-        .join("; ");
+    return all.map((c) => `${c.name}=${c.value}`).join("; ");
 }
 
 async function buildForwardedForHeader(): Promise<string | undefined> {
-    const h = await headers(); // ★ Promise를 await
+    const h = await headers();
 
     const existing = h.get("x-forwarded-for") ?? undefined;
     const candidateIp =
@@ -43,20 +43,22 @@ async function buildForwardedForHeader(): Promise<string | undefined> {
     return existing ?? candidateIp ?? undefined;
 }
 
-/*
- * Next 서버에서 Express로 요청을 보낼 때:
- * - X-Forwarded-For: 실제 클라이언트 IP 체인 유지
- * - Cookie: 브라우저 쿠키 그대로 전달 (HttpOnly 포함)
- */
 export async function callExpress<TResponse = unknown, TBody = unknown>(
     opts: FetchOptions<TBody>,
 ): Promise<TResponse> {
     const { path, method = "GET", body, cache, next } = opts;
 
-    // cookies() / headers() 둘 다 Promise라 병렬로 기다림
+    // ✅ 기본값 : 정적/ISR 안전
+    const forward: ForwardMode = opts.forward ?? "none";
+
+    // ✅ forward 모드에 따라 필요한 것만 읽는다
     const [cookieHeader, xff] = await Promise.all([
-        buildCookieHeader(),
-        buildForwardedForHeader(),
+        forward === "cookies" || forward === "cookies+ip"
+            ? buildCookieHeader()
+            : Promise.resolve(undefined),
+        forward === "ip" || forward === "cookies+ip"
+            ? buildForwardedForHeader()
+            : Promise.resolve(undefined),
     ]);
 
     const res = await fetch(`${EXPRESS_BASE_URL}${path}`, {
@@ -80,9 +82,6 @@ export async function callExpress<TResponse = unknown, TBody = unknown>(
         throw new Error(`Express error: ${res.status}`);
     }
 
-    if (res.status === 204) {
-        return undefined as TResponse;
-    }
-
+    if (res.status === 204) return undefined as TResponse;
     return (await res.json()) as TResponse;
 }
