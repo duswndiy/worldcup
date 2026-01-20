@@ -34,7 +34,7 @@ export async function createComment(
                         ? nickname.trim()
                         : undefined,
                 content: content.trim(),
-            },
+            }, forward: "ip",
         });
 
         // 결과 페이지 및 댓글 캐시 무효화
