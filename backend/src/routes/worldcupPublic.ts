@@ -203,9 +203,14 @@ async function resolveTournament(
     res: Response,
     next: NextFunction
 ) {
-    const { error, tournamentId } = await getTournamentUuidByShortId(
-        req.params.id
-    );
+    const raw = (req.params as any).id as string | string[] | undefined;
+    const id = Array.isArray(raw) ? raw[0] : raw;
+
+    if (!id) {
+        return res.status(400).json({ error: "잘못된 월드컵 ID 입니다." });
+    }
+
+    const { error, tournamentId } = await getTournamentUuidByShortId(id);
 
     if (error === "invalid") {
         return res.status(400).json({ error: "잘못된 월드컵 ID 입니다." });
